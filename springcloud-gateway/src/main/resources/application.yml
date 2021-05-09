@@ -1,0 +1,22 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: springcloud-gateway-server-8090
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 120.26.198.46:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true   # 开启从注册中心动态创建路由的功能,利用微服务名称进行路由
+#      routes:
+#        - id: gateway-server   # 路由的ID
+#          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+#          # 会对GET请求添加 username=jack 的请求参数
+#          filters:
+#            - AddRequestParameter=username, jack
+#          predicates:
+#            - Method=GET

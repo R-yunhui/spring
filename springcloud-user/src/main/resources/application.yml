@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: springcloud-user-8081
+  cloud:
+    nacos:
+      discovery:
+        # nacos 地址
+        server-addr: 120.26.198.46:8848
+
+# 公开所有网络端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
