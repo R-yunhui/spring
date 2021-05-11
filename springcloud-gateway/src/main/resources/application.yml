@@ -1,22 +1,98 @@
-server:
-  port: 8090
-
-spring:
-  application:
-    name: springcloud-gateway-server-8090
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 120.26.198.46:8848
-    gateway:
-      discovery:
-        locator:
-          enabled: true   # 开启从注册中心动态创建路由的功能,利用微服务名称进行路由
+#server:
+#  port: 8090
+#
+#spring:
+#  application:
+#    name: springcloud-gateway-server-8090
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 120.26.198.46:8848
+#    gateway:
+#      discovery:
+#        locator:
+#          enabled: true   # 开启从注册中心动态创建路由的功能,利用微服务名称进行路由
 #      routes:
-#        - id: gateway-server   # 路由的ID
+#        - id: after_route   # 路由的ID
 #          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
-#          # 会对GET请求添加 username=jack 的请求参数
+#          predicates: # 断言配置 在指定时间之后的请求可以匹配该路由
+#            - After=2021-05-10T11:30:00+08:00[Asia/Shanghai]
+##          filters: # 过滤器配置 给请求添加参数的过滤器。
+##            - AddRequestParameter=username, mike
+##          filters: # 对指定数量的路径前缀进行去除的过滤器。
+##            - StripPrefix=2
+##          filters: # 会对原有路径进行增加操作的过滤器。
+##            - PrefixPath=/test
+##          filters: # 给请求头添加参数的过滤器。
+##            - AddRequestHeader=username, mike
+##          filters: # 重定向到https://www.baidu.com/ 且携带一个Location=https://www.baidu.com/ 的Header
+##            - RedirectTo=302, https://www.baidu.com/
+##          filters:
+##            - name: Retry
+##              args:
+##                retries: 5  # 重试次数
+##                statuses: BAD_GATEWAY  # 返回哪个状态码需要进行重试，返回状态码为5XX进行重试
+##          filters:
+##            - name: RequestRateLimiter
+##              args:
+##                redis-rate-limiter.replenishRate: 1  # 每秒允许处理的请求数量（令牌桶每秒填充平均速率）
+##                redis-rate-limiter.burstCapacity: 2  # 每秒最大处理的请求数量（令牌桶总容量）
+##                key-resolver: "#{@HostKeyResolver}"  # 限流策略，对应策略的Bean（用于限流的键的解析器的 Bean 对象的名字。它使用 SpEL 表达式根据#{@beanName}从 Spring 容器中获取 Bean 对象）
 #          filters:
-#            - AddRequestParameter=username, jack
-#          predicates:
-#            - Method=GET
+#            - name: VipUser
+#              args:
+#                name: vip
+##        - id: before_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 在指定时间之前的请求可以匹配该路由
+##            - Before=2021-05-10T10:30:00+08:00[Asia/Shanghai]
+##        - id: between_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 在指定时间之间的请求可以匹配该路由
+##            - Between=2021-05-10T11:30:00+08:00[Asia/Shanghai], 2021-05-10T12:30:00+08:00[Asia/Shanghai]
+##        - id: cookie_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 带有指定Cookie的请求会匹配该路由
+##            - Cookie=username, mike
+##        - id: header_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 带有指定请求头的请求会匹配该路由（支持正则）
+##            - Header=X-Request-Id, \d+
+##        - id: host_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 带有指定Host的请求会匹配该路由
+##            - Host=**.macrozheng.com
+##        - id: method_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 发送指定的方法的请求会匹配该路由
+##            - Method=POST
+##        - id: path_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 发送指定路径的请求会匹配该路由
+##            - Path=/pathRoutePredicateFactory/{id}
+##        - id: query_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 带指定查询参数的请求可以匹配该路由
+##            - Query=username
+##        - id: remoteAddr_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 从指定远程地址发起的请求可以匹配该路由
+##            - RemoteAddr=192.168.1.1/24
+##        - id: weight_high
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates: # 断言配置 使用权重来路由相应请求，以下表示有80%的请求会被路由到springcloud-user-8081，20%会被路由到springcloud-user-8082
+##            - Weight=group1, 8
+##        - id: weight_low
+##          uri: lb://springcloud-user-8082/   # 路由到的微服务地址
+##          predicates:
+##            - Weight=group1, 2
+##        - id: vipUser_route
+##          uri: lb://springcloud-user-8081/   # 路由到的微服务地址
+##          predicates:
+##            - VipUser=vipTag, vip
+#
+#  redis:
+#    host: 120.26.198.46
+#    port: 6379
+#    database: 0
+#    password: ryh123.0

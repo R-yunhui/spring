@@ -1,0 +1,13 @@
+[
+  {
+    "id": "after_route",
+    "predicates": [{
+      "name": "After",
+      "args": {
+        "datetime": "2021-05-11T09:30:00+08:00[Asia/Shanghai]"
+      }
+    }],
+    "uri": "lb://springcloud-user-8081/",
+    "filters": []
+  }
+]
