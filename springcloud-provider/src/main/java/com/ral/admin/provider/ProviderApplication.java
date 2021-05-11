@@ -1,22 +1,22 @@
-package com.ral.admin.springcloud;
+package com.ral.admin.provider;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 /**
  * @Author: RenYunHui
- * @Date: 2021-05-08 13:34
+ * @Date: 2021-05-12 17:19
  * @Describe:
  * @Modify:
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
-public class UserApplication {
+@RefreshScope
+public class ProviderApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(UserApplication.class, args);
+        SpringApplication.run(ProviderApplication.class, args);
     }
 }

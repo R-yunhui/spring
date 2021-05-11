@@ -7,3 +7,4 @@ spring:
         server-addr: 120.26.198.46:8848
         group: DEFAULT_GROUP   # 指定分组 将不同的微服务划分到同一个分组
         shared-dataids: gateway-server.yaml
+        refreshable-dataids: gateway-server.yaml

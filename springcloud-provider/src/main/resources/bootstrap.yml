@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        server-addr: 120.26.198.46:8848
+        shared-dataids: springcloud-provider-service.yaml
+        enabled: true
+
+
+

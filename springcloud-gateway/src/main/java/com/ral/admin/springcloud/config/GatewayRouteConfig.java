@@ -43,13 +43,13 @@ public class GatewayRouteConfig {
         }
     }
 
-    //@Bean(name = "PathKeyResolver")
-    //public PathKeyResolver pathKeyResolver() {
-    //    return new PathKeyResolver();
-    //}
-
-    @Bean(name = "HostKeyResolver")
-    public HostKeyResolver hostKeyResolver() {
-        return new HostKeyResolver();
+    @Bean(name = "PathKeyResolver")
+    public PathKeyResolver pathKeyResolver() {
+        return new PathKeyResolver();
     }
+
+    //@Bean(name = "HostKeyResolver")
+    //public HostKeyResolver hostKeyResolver() {
+    //    return new HostKeyResolver();
+    //}
 }

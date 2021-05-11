@@ -12,6 +12,8 @@
         <module>springcloud-gateway</module>
         <module>springcloud-user</module>
         <module>springcloud-common</module>
+        <module>springcloud-webflux</module>
+        <module>springcloud-provider</module>
     </modules>
 
     <name>父模块</name>

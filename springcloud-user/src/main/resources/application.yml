@@ -9,6 +9,17 @@ spring:
       discovery:
         # nacos 地址
         server-addr: 120.26.198.46:8848
+    sentinel:
+      transport:
+        # sentinel dashboard 地址
+        dashboard: 127.0.0.1:8080
+        # 默认端口 如何被占用 会+1进行扫描 直到找到未被占用的
+        port: 8719
+
+
+feign:
+  sentinel:
+    enabled: true
 
 # 公开所有网络端点
 management:
