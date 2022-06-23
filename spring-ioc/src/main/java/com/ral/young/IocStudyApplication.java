@@ -1,4 +1,4 @@
-package ioc;
+package com.ral.young;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
