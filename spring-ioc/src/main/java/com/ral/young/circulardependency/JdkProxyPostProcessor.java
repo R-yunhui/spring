@@ -15,6 +15,7 @@ public class JdkProxyPostProcessor implements SmartInstantiationAwareBeanPostPro
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean.getClass().equals(InstanceA.class)) {
+            // 模拟通过动态代理的方式创建代理对象
             System.out.println("创建动态代理对象");
             return new InstanceA();
         }
