@@ -1,7 +1,6 @@
 package com.ral.young.aop;
 
 import com.ral.young.aop.service.ITestService;
-import com.ral.young.aop.service.impl.TestServiceImpl;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**

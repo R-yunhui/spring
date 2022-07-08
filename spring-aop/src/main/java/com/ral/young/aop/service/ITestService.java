@@ -12,4 +12,9 @@ public interface ITestService {
      * 测试方法
      */
     void testLog();
+
+    /**
+     * 测试方法
+     */
+    void say();
 }

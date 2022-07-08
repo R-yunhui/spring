@@ -11,7 +11,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @date 2022-06-30 14:23
  * @since 1.0.0
  */
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 @Configuration
 @ComponentScan(value = "com.ral.young.aop")
 public class AopConfig {
