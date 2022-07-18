@@ -13,6 +13,7 @@
         <module>spring-aop</module>
         <module>spring-transaction</module>
         <module>spring-boot-practice</module>
+        <module>interview</module>
     </modules>
 
     <parent>
