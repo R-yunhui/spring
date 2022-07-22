@@ -1,0 +1,16 @@
+server:
+  port: 8091
+
+spring:
+  redis:
+    database: 0
+    password: ryh123.0
+    host: 49.235.87.36
+    port: 6379
+    ## 连接池
+    lettuce:
+      pool:
+        max-idle: 80
+        min-idle: 10
+        max-active: 100
+        max-wait: 1000

@@ -1,4 +1,4 @@
-package com.ral.young;
+package com.ral.young.collection;
 
 import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.IdUtil;
