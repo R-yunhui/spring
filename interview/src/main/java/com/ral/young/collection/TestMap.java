@@ -37,12 +37,13 @@ public class TestMap {
             // 一个线程对 map 死循环的方式使用迭代器进行遍历
             for (; ; ) {
                 // 初始化迭代器的时候会定义一个：expectedModCount = modCount
+                // 迭代器遍历以及增强for循环会抛出 ConcurrentModificationException
                 for (Map.Entry<String, String> stringStringEntry : map.entrySet()) {
                     System.out.println(stringStringEntry.getKey());
                 }
             }
         });
 
-        // 结论：抛出：ConcurrentModificationException   modCount != expectedModCount
+        // 结论：迭代器遍历和增强for循环会抛出：ConcurrentModificationException   modCount != expectedModCount
     }
 }
