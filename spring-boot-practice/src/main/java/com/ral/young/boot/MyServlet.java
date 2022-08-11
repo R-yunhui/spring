@@ -17,7 +17,6 @@ import java.io.IOException;
 @WebServlet(value = "test")
 public class MyServlet extends HttpServlet {
 
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.getWriter().write("hello word");
