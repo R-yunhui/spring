@@ -17,6 +17,7 @@
         <module>spring-microservice</module>
         <module>spring-mall-service</module>
         <module>spring-order-service</module>
+        <module>demo-netty</module>
     </modules>
 
     <parent>
