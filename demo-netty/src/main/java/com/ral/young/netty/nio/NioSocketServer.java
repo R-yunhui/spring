@@ -33,6 +33,7 @@ public class NioSocketServer {
 
         // 创建 selector - 多路复用器
         // linux 系统下使用 EpollSelectorImpl
+        // linux 系统：底层调用了内核函数 epoll_create，向内核申请空间，创建epoll句柄，并返回一个非负数作为文件描述符，用于对epoll接口的所有后续调用。并添加到 epollWrapper 中
         Selector selector = Selector.open();
         // 将 serverSocketChannel 注册到 selector  -  OP_ACCEPT 连接事件
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -40,6 +41,8 @@ public class NioSocketServer {
 
         while (true) {
             // 阻塞，等待有事件发生，事件驱动模型 - 有事件响应的时候，会退出阻塞，将响应的事件放到一个集合里面
+            // linux 系统：底层调用了内核函数 epoll_ctl - 真正将 ServerSocketChannel 和 Selector 进行绑定，向 epfd 对应的内核 epoll 对象添加，修改，删除对 fd 上 event 的监听
+            // 再调用内核函数 epoll_wait，将响应的事件和 selector 进行绑定，通过循环，不断地监听暴露的端口，看哪一个 epfd 可读、可写。
             selector.select();
 
             log.info("有事件发生:{}", DateUtil.now());
@@ -59,6 +62,7 @@ public class NioSocketServer {
                     socketChannel.register(selector, SelectionKey.OP_READ);
                     log.info("客户端连接完成,客户端信息:{}", socketChannel.getLocalAddress());
                 } else if (selectionKey.isReadable()) {
+                    // 除了连接事件以外的事件，可以使用线程池进行优化，异步处理
                     // 读事件发生
                     SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
                     // 1kb，使用直接内存的方式读取通道里面的数据
