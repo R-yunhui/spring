@@ -37,7 +37,7 @@ public class ChatServer {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
                     ch.pipeline()
-                            // 编解码 handler
+                            // 解码 - StringDecoder  编码 - StringEncoder
                             .addLast("decoder", new StringDecoder()).addLast("encoder", new StringEncoder()).addLast(new ChatServerHandler());
                 }
             });
@@ -48,13 +48,13 @@ public class ChatServer {
             channelFuture.addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     log.info("=====              =====");
-                    log.info("=====              =====");
                     log.info("===== 聊天室启动完毕 =====");
-                    log.info("=====              =====");
                     log.info("=====              =====");
                 }
             });
 
+        } catch (InterruptedException e1) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("聊天室异常,errorMsg:{}", e.getMessage(), e);
         }

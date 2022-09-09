@@ -2,6 +2,7 @@ package com.ral.young.netty.netty.chat;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -33,18 +34,24 @@ public class ChatClient {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
                     ch.pipeline()
-                            // 编解码器
+                            // 解码 - StringDecoder  编码 - StringEncoder
                             .addLast("decoder", new StringDecoder()).addLast("encoder", new StringEncoder()).addLast(new ChatClientHandler());
                 }
             });
 
             ChannelFuture channelFuture = bootstrap.connect("127.0.0.1", 9000).sync();
 
-            Scanner scanner = new Scanner(System.in);
-            log.info("客户端连接服务端成功");
-            while (scanner.hasNextLine()) {
-                channelFuture.channel().writeAndFlush(scanner.nextLine());
-            }
+            channelFuture.addListener((ChannelFutureListener) future -> {
+                if (future.isSuccess()) {
+                    log.info("客户端连接服务端成功");
+                    Scanner scanner = new Scanner(System.in);
+                    while (scanner.hasNextLine()) {
+                        channelFuture.channel().writeAndFlush(scanner.nextLine());
+                    }
+                }
+            });
+        } catch (InterruptedException e1) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("聊天室客户端异常,errorMsg:{}", e.getMessage(), e);
         }
