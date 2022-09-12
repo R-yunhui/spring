@@ -18,6 +18,7 @@
         <module>spring-mall-service</module>
         <module>spring-order-service</module>
         <module>demo-netty</module>
+        <module>concurrent-programming</module>
     </modules>
 
     <parent>
