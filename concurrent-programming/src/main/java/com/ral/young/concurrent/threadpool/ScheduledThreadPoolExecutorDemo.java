@@ -18,14 +18,34 @@ import java.util.concurrent.TimeUnit;
 public class ScheduledThreadPoolExecutorDemo {
 
     public static void main(String[] args) {
-        ScheduledThreadPoolExecutor scheduledThreadPoolExecutorOne = new ScheduledThreadPoolExecutor(5, ThreadFactoryBuilder.create().setNamePrefix("scheduledOne-").build());
+        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(5, ThreadFactoryBuilder.create().setNamePrefix("scheduled-").build());
+        // 此 api 只会延时执行一次，除非再次显示调用才会再次执行
+        scheduledThreadPoolExecutor.schedule(new TaskDemo(scheduledThreadPoolExecutor), 5, TimeUnit.SECONDS);
 
+        ScheduledThreadPoolExecutor scheduledThreadPoolExecutorOne = new ScheduledThreadPoolExecutor(5, ThreadFactoryBuilder.create().setNamePrefix("scheduledOne-").build());
         // 按照固定的速率执行任务，如果存在任务执行时间超过了这个固定的速率，则在当前任务完成之后会立刻执行下一个任务
         scheduledThreadPoolExecutorOne.scheduleAtFixedRate(new TaskDemoOne(10L), 0, 5, TimeUnit.SECONDS);
 
-        // 按照固定的延迟执行任务，如果存在任务执行时间超过了这个固定的延迟，则在当前任务完成之后再次等待这个固定的延迟时间之后再执行
         ScheduledThreadPoolExecutor scheduledThreadPoolExecutorTwo = new ScheduledThreadPoolExecutor(5, ThreadFactoryBuilder.create().setNamePrefix("scheduledTwo-").build());
-        scheduledThreadPoolExecutorTwo.scheduleWithFixedDelay(new TaskDemoOne(8L), 5, 5, TimeUnit.SECONDS);
+        // 按照固定的延迟执行任务，如果存在任务执行时间超过了这个固定的延迟，则在当前任务完成之后再次等待这个固定的延迟时间之后再执行
+        scheduledThreadPoolExecutorTwo.scheduleWithFixedDelay(new TaskDemoOne(8L), 0, 5, TimeUnit.SECONDS);
+    }
+
+    public static class TaskDemo implements Runnable {
+
+        private final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
+
+        public TaskDemo(ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+            this.scheduledThreadPoolExecutor = scheduledThreadPoolExecutor;
+        }
+
+        @Override
+        public void run() {
+            log.info("{} run task,time:{}", Thread.currentThread().getName(), DateUtil.now());
+
+            // 只有添加任务，才会添加 Worker
+            scheduledThreadPoolExecutor.schedule(new TaskDemo(this.scheduledThreadPoolExecutor), 5, TimeUnit.SECONDS);
+        }
     }
 
     public static class TaskDemoOne implements Runnable {
