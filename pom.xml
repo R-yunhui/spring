@@ -20,6 +20,7 @@
         <module>demo-netty</module>
         <module>concurrent-programming</module>
         <module>spring-practice</module>
+        <module>spring-mybatis</module>
     </modules>
 
     <parent>
