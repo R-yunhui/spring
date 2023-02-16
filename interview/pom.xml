@@ -51,6 +51,13 @@
             <artifactId>jol-core</artifactId>
             <version>0.16</version>
         </dependency>
+
+        <!-- 绑定任务到指定的线程 -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>affinity</artifactId>
+            <version>3.2.3</version>
+        </dependency>
     </dependencies>
 
 </project>
