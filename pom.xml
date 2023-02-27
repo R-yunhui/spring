@@ -21,6 +21,7 @@
         <module>concurrent-programming</module>
         <module>spring-practice</module>
         <module>spring-mybatis</module>
+        <module>spring-kafka</module>
     </modules>
 
     <parent>
