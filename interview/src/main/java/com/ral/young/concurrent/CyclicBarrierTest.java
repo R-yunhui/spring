@@ -36,7 +36,7 @@ public class CyclicBarrierTest {
                     log.info("线程:{},准备完毕,现在的线程等待数量:{}", Thread.currentThread().getName(), cyclicBarrier.getNumberWaiting());
                     // 消除阻碍，等待不存在阻碍之后，所有线程开始执行 await 的后续的逻辑
                     cyclicBarrier.await();
-                    log.info("线程:{}，开始执行任务", Thread.currentThread().getName());
+                    log.info("线程:{},开始执行任务", Thread.currentThread().getName());
                 } catch (InterruptedException | BrokenBarrierException e) {
                     throw new RuntimeException(e);
                 }

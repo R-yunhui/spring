@@ -29,7 +29,7 @@ public class CycleDependency {
     /**
      * 二级缓存 - 为了将成熟的 Bean 和纯净的 Bean 进行分离，避免获取到不完整的 Bean
      */
-    private static Map<String, Object> earlySingleTonObjects = new ConcurrentHashMap<>();
+    private static final Map<String, Object> earlySingleTonObjects = new ConcurrentHashMap<>();
 
     /**
      * 三级缓存 - 存放一个函数接口，创建
