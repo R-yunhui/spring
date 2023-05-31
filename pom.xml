@@ -22,6 +22,7 @@
         <module>spring-practice</module>
         <module>spring-mybatis</module>
         <module>spring-kafka</module>
+        <module>basic</module>
     </modules>
 
     <parent>
