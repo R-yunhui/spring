@@ -1,4 +1,4 @@
-package com.ral.young.basic.oncurrent;
+package com.ral.young.basic.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;

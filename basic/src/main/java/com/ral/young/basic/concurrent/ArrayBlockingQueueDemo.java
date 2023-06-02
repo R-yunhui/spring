@@ -1,4 +1,4 @@
-package com.ral.young.basic.oncurrent;
+package com.ral.young.basic.concurrent;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
