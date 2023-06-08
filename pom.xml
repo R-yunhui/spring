@@ -51,6 +51,7 @@
         <common-lang3.version>3.12.0</common-lang3.version>
         <open-feign.version>11.8</open-feign.version>
         <flyway.version>6.0.8</flyway.version>
+        <mybatis-plus-baomidou.version>3.5.3.1</mybatis-plus-baomidou.version>
     </properties>
 
     <dependencyManagement>

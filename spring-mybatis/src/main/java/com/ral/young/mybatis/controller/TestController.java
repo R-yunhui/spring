@@ -1,7 +1,14 @@
 package com.ral.young.mybatis.controller;
 
-import com.ral.young.mybatis.service.TestService;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
+import com.ral.young.mybatis.common.BaseResult;
+import com.ral.young.mybatis.dto.UserDTO;
+import com.ral.young.mybatis.service.IUserService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,31 +16,30 @@ import javax.annotation.Resource;
 
 /**
  * @author renyunhui
- * @date 2023-05-24 13:53
+ * @date 2023-06-08 14:26
  * @since 1.0.0
  */
-@RestController
-@RequestMapping(value = "/test")
+@RestController()
+@RequestMapping(value = "/test/user")
 public class TestController {
 
     @Resource
-    private TestService testService;
+    private IUserService userService;
 
-    @GetMapping(value = "/add")
-    public String testAdd() {
-        testService.add();
-        return "add ok";
+    @GetMapping("/{userId}")
+    public BaseResult<UserDTO> getUser(@PathVariable(value = "userId") Long userId) {
+        UserDTO userDTO = userService.getById(userId);
+        return BaseResult.success(userDTO);
     }
 
-    @GetMapping(value = "/update")
-    public String testUpdate() {
-        testService.update();
-        return "update ok";
-    }
+    @PostMapping
+    public BaseResult<String> registerUser(@RequestBody UserDTO userDTO) {
+        userDTO.setCreateTime(DateUtil.date());
+        userDTO.setUpdateTime(DateUtil.date());
+        userDTO.setCreateUser(IdUtil.getSnowflakeNextId());
+        userDTO.setUpdateUser(IdUtil.getSnowflakeNextId());
 
-    @GetMapping(value = "/query")
-    public String testQuery() {
-        testService.query();
-        return "query ok";
+        userService.save(userDTO);
+        return BaseResult.success();
     }
 }
