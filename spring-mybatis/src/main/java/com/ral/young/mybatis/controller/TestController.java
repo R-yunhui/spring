@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import com.ral.young.mybatis.common.BaseResult;
 import com.ral.young.mybatis.dto.UserDTO;
 import com.ral.young.mybatis.service.IUserService;
+import com.ral.young.mybatis.service.TestService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,9 @@ public class TestController {
     @Resource
     private IUserService userService;
 
+    @Resource
+    private TestService testService;
+
     @GetMapping("/{userId}")
     public BaseResult<UserDTO> getUser(@PathVariable(value = "userId") Long userId) {
         UserDTO userDTO = userService.getById(userId);
@@ -40,6 +44,12 @@ public class TestController {
         userDTO.setUpdateUser(IdUtil.getSnowflakeNextId());
 
         userService.save(userDTO);
+        return BaseResult.success();
+    }
+
+    @GetMapping(value = "/testBatchSave")
+    public BaseResult<String> testOne() {
+        testService.testBatchSave();
         return BaseResult.success();
     }
 }

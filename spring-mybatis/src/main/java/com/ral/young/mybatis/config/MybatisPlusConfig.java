@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.config.GlobalConfig;
 import com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.ral.young.mybatis.injector.ExpandSqlInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,5 +38,10 @@ public class MybatisPlusConfig {
             configuration.setDefaultEnumTypeHandler(MybatisEnumTypeHandler.class);
             properties.setConfiguration(configuration);
         };
+    }
+
+    @Bean
+    public ExpandSqlInjector expandSqlInjector() {
+        return new ExpandSqlInjector();
     }
 }
