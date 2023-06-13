@@ -35,6 +35,25 @@ public class TestService {
     private UserMapper userMapper;
 
     @Transactional
+    public void mockL1Cache(Long id) {
+        // 模拟使用一级缓存的情况，查看控制台是否重复打印sql
+        log.info("模拟一级缓存是否生效");
+        log.info("第一次查询id:{}", id);
+        userMapper.selectById(id);
+
+        /*
+         * 一级缓存是SqlSession级别的缓存。在操作数据库时需要构造sqlSession对象，在对象中有一个数据结构（HashMap）用于存储缓存数据。
+         * 不同的sqlSession之间的缓存数据区域（HashMap）是互相不影响的。 一级缓存是默认开启的不用配置。
+         *
+         * 【注】：保证在事务中进行处理，否则会进行判断：org.mybatis.spring.SqlSessionUtils.isSqlSessionTransactional - 事务管理是否持有的 SqlSessionHolder，并且持有的和当前 sqlSession 是否一致，
+         *  false 直接就直提交了，然后会清空缓存 clearLocalCache()
+         */
+
+        log.info("第二次查询id:{}", id);
+        userMapper.selectById(id);
+    }
+
+    @Transactional
     public void testBatchSave() {
         // 测试mybatis-plus自带的批量插入功能的效率
         List<UserDTO> userDTOS = mockUserInfoList();

@@ -27,3 +27,4 @@ mybatis-plus:
       logic-not-delete-value: 0       # 0 代表未删除
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 sql 语句
+    cache-enabled: true               # 默认开启

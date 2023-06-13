@@ -36,6 +36,12 @@ public class TestController {
         return BaseResult.success(userDTO);
     }
 
+    @GetMapping("/mockL1Cache/{userId}")
+    public BaseResult<Void> mockL1Cache(@PathVariable(value = "userId") Long userId) {
+        testService.mockL1Cache(userId);
+        return BaseResult.success();
+    }
+
     @PostMapping
     public BaseResult<String> registerUser(@RequestBody UserDTO userDTO) {
         userDTO.setCreateTime(DateUtil.date());
