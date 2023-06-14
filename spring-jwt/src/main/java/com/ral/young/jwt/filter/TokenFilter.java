@@ -1,5 +1,6 @@
 package com.ral.young.jwt.filter;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ral.young.jwt.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class TokenFilter implements Filter {
         // 判断请求头中是否包含token信息并且是否合法
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String token = httpServletRequest.getHeader("token");
-        if (StrUtil.isBlank(token)) {
+        if (CharSequenceUtil.isBlank(token)) {
             token = httpServletRequest.getHeader("authorization");
         }
         boolean success = JwtUtil.checkToken(token);

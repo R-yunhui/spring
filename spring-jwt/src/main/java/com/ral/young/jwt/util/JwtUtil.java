@@ -1,7 +1,7 @@
 package com.ral.young.jwt.util;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -60,7 +60,7 @@ public class JwtUtil {
      * @return 是否过期
      */
     public static boolean checkToken(String jwtToken) {
-        if (StrUtil.isBlank(jwtToken)) {
+        if (CharSequenceUtil.isBlank(jwtToken)) {
             log.warn("传递的 jwtToken 为空");
             return false;
         }
@@ -87,9 +87,9 @@ public class JwtUtil {
      * @return 返回解析后的用户 id
      */
     public static String getMemberIdByJwtToken(String jwtToken) {
-        if (StrUtil.isBlank(jwtToken)) {
+        if (CharSequenceUtil.isBlank(jwtToken)) {
             log.warn("传递的 jwtToken 为空");
-            return StrUtil.EMPTY;
+            return CharSequenceUtil.EMPTY;
         }
 
         Jws<Claims> claimsJws = Jwts.parser().setSigningKey(APP_SECRET).parseClaimsJws(jwtToken);
