@@ -23,6 +23,7 @@
         <module>spring-mybatis</module>
         <module>spring-kafka</module>
         <module>basic</module>
+        <module>spring-jwt</module>
     </modules>
 
     <parent>
@@ -45,13 +46,13 @@
         <mysql.version>8.0.21</mysql.version>
         <mybatis-plus.version>3.4.3.4</mybatis-plus.version>
         <druid.version>1.2.8</druid.version>
-        <jwt.version>0.9.0</jwt.version>
         <swagger.version>2.9.2</swagger.version>
         <common-collection.version>4.4</common-collection.version>
         <common-lang3.version>3.12.0</common-lang3.version>
         <open-feign.version>11.8</open-feign.version>
         <flyway.version>6.0.8</flyway.version>
         <mybatis-plus-baomidou.version>3.5.3.1</mybatis-plus-baomidou.version>
+        <jwt.version>0.9.1</jwt.version>
     </properties>
 
     <dependencyManagement>
