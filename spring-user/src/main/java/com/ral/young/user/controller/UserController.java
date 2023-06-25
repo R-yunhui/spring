@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- *
  * @author renyunhui
  * @date 2023-06-20 14:41
  * @since 1.0.0
@@ -34,5 +34,14 @@ public class UserController {
     @GetMapping(value = "/getUser/{id}")
     public BaseResult<UserDTO> getUser(@PathVariable(value = "id") Long userId) {
         return BaseResult.success(userService.getUserById(userId));
+    }
+
+    @GetMapping(value = "/mockError")
+    public BaseResult<String> mockError() {
+        int a = ThreadLocalRandom.current().nextInt(10) + 1;
+        if (a > 3) {
+            throw new RuntimeException("异常了");
+        }
+        return BaseResult.success("mockError");
     }
 }

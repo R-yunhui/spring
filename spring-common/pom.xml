@@ -38,6 +38,12 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>${mybatis-plus-baomidou.version}</version>
         </dependency>
+
+        <!-- web app -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
