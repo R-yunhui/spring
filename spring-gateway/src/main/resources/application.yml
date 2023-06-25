@@ -1,0 +1,35 @@
+server:
+  servlet:
+    context-path: /gateway
+  port: 10080
+
+spring:
+  application:
+    name: gateway-ral-service
+  cloud:
+    ## nacos 的配置
+    nacos:
+      server-addr: localhost:8848
+      config:
+        file-extension: yaml
+      discovery:
+        namespace: e12936ac-d4dc-4ab5-9c2c-2e50a64512ef
+
+    ## 网关路由
+    gateway:
+      routes:
+        ### 版本一的路由
+        - id: "server_one"
+          uri: http://127.0.0.1:11080
+          predicates:
+            - Path=/api/v1/**
+
+        ### 版本二的路由
+        - id: "server-two"
+          uri: http://127.0.0.1:12080
+          predicates:
+            - Path=/api/v2/**
+
+
+
+
