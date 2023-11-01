@@ -28,6 +28,7 @@
         <module>spring-common</module>
         <module>spring-user</module>
         <module>spring-webflux</module>
+        <module>flink</module>
     </modules>
 
     <parent>
@@ -57,6 +58,7 @@
         <flyway.version>6.0.8</flyway.version>
         <mybatis-plus-baomidou.version>3.5.3.1</mybatis-plus-baomidou.version>
         <jwt.version>0.9.1</jwt.version>
+        <flink.version>1.16.1</flink.version>
     </properties>
 
     <dependencyManagement>
