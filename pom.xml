@@ -29,6 +29,7 @@
         <module>spring-user</module>
         <module>spring-webflux</module>
         <module>flink</module>
+        <module>study</module>
     </modules>
 
     <parent>
