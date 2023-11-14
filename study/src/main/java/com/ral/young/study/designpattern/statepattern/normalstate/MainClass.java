@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.statepattern;
+package com.ral.young.study.designpattern.statepattern.normalstate;
 
 /**
  * main 方法测试

@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.statepattern;
+package com.ral.young.study.designpattern.statepattern.normalstate;
 
 /**
  * 定义一个抽奖状态的接口 - state

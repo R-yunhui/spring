@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.statepattern;
+package com.ral.young.study.designpattern.statepattern.normalstate;
 
 /**
  * 抽奖状态的 context
