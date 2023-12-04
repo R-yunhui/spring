@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.statepattern.enumstate;
+package com.ral.young.study.designpattern.behavioral.policypattern.statepattern.enumstate;
 
 import java.math.BigDecimal;
 
