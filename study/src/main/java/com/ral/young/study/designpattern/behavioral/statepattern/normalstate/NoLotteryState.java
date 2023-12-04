@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.behavioral.policypattern.statepattern.normalstate;
+package com.ral.young.study.designpattern.behavioral.statepattern.normalstate;
 
 /**
  * 无法抽奖的状态

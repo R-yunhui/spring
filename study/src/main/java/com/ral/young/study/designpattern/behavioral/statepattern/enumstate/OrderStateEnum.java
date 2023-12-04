@@ -1,4 +1,4 @@
-package com.ral.young.study.designpattern.behavioral.policypattern.statepattern.enumstate;
+package com.ral.young.study.designpattern.behavioral.statepattern.enumstate;
 
 /**
  * 订单状态枚举
