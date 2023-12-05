@@ -24,7 +24,7 @@ public class DataSourceConfig {
     @Bean
     public DataSource dataSource() {
         MysqlDataSource mysqlDataSource = new MysqlDataSource();
-        mysqlDataSource.setUrl("jdbc:mysql://49.235.87.36:3306/study?serverTimezone=UTC");
+        mysqlDataSource.setUrl("jdbc:mysql://127.0.0.1:3306/study?serverTimezone=UTC");
         mysqlDataSource.setUser("root");
         mysqlDataSource.setPassword("ryh123.0");
         return mysqlDataSource;
