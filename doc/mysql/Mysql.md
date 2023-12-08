@@ -3207,9 +3207,9 @@ delete from t /*comment*/  where a>=4 and t_modified<='2018-11-10' limit 1;
 show binlog events in 'master.000001';
 ```
 
-![image-20220121155623646](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121155623646.png)
+![image-20231205164141012](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164141012.png)
 
-​																								**图 3 statement 格式 binlog 示例**
+​														**图 3 statement 格式 binlog 示例**
 
 ```
 看一下图 3 的输出结果。
@@ -3220,9 +3220,9 @@ use 'test’命令之后的 delete 语句，就是我们输入的 SQL 原文了�
 4.最后一行是一个 COMMIT。你可以看到里面写着 xid=61。（redo log 和 bin log 进行关联）
 ```
 
-![image-20220121160218475](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121160218475.png)
+![image-20231205164209224](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164209224.png)
 
-​																									**图 4 delete 执行 warnings**
+​					                                            			**图 4 delete 执行 warnings**
 
 ```
 运行这条 delete 命令产生了一个 warning，原因是当前 binlog 设置的是 statement 格式，并且语句中有 limit，所以这个命令可能是 unsafe 的。
@@ -3242,7 +3242,7 @@ use 'test’命令之后的 delete 语句，就是我们输入的 SQL 原文了�
 如果我把 binlog 的格式改为 binlog_format=‘row’， 是不是就没有这个问题了呢？
 ```
 
-![image-20220121160826859](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121160826859.png)
+![image-20231205164248546](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164248546.png)
 
 ​																										**图 5 row 格式 binlog 示例**
 
@@ -3258,7 +3258,7 @@ use 'test’命令之后的 delete 语句，就是我们输入的 SQL 原文了�
 mysqlbinlog  -vv data/master.000001 --start-position=6705;
 ```
 
-![image-20220121162052625](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121162052625.png)
+![image-20231205164300186](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164300186.png)
 
 ​																					**图 6 row 格式 binlog 示例的详细信息**
 
@@ -3312,7 +3312,7 @@ insert into t values(10,10, now());
 如果我们把 binlog 格式设置为 mixed，你觉得 MySQL 会把它记录为 row 格式还是 statement 格式呢？
 ```
 
-![image-20220121162940511](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121162940511.png)
+![image-20231205164313265](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164313265.png)
 
 ​																									**图 7 mixed 格式和 now()**
 
@@ -3320,7 +3320,7 @@ insert into t values(10,10, now());
 可以看到，MySQL 用的居然是 statement 格式。你一定会奇怪，如果这个 binlog 过了 1 分钟才传给备库的话，那主备的数据不就不一致了吗？
 ```
 
-![image-20220121163243203](http://ren-bed.oss-cn-beijing.aliyuncs.com/img/image-20220121163243203.png)
+![image-20231205164321459](C:\Users\renyunhui\AppData\Roaming\Typora\typora-user-images\image-20231205164321459.png)
 
 ​																										**图 8 TIMESTAMP 命令**
 
