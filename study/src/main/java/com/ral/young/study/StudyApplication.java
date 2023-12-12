@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @date 2023-11-20 14:21
  * @since 1.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.ral.young.study.cacheconsistency"})
 public class StudyApplication {
 
     public static void main(String[] args) {
