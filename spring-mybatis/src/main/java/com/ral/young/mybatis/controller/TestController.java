@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author renyunhui
@@ -34,6 +35,12 @@ public class TestController {
     public BaseResult<UserDTO> getUser(@PathVariable(value = "userId") Long userId) {
         UserDTO userDTO = userService.getById(userId);
         return BaseResult.success(userDTO);
+    }
+
+    @GetMapping("/selectCount")
+    public BaseResult<Long> selectAll() {
+        long count = userService.count();
+        return BaseResult.success(count);
     }
 
     @GetMapping("/mockL1Cache/{userId}")
