@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
  * @date 2023-12-13 15:32
  * @since 1.0.0
  */
-@Component
+@Component(value = "statFilter")
 @Slf4j
-public class SlowSqlMetric extends StatFilter {
+public class MyStatFilter extends StatFilter {
 
     @Override
     protected void handleSlowSql(StatementProxy statementProxy) {
