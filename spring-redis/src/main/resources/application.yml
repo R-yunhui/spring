@@ -1,0 +1,5 @@
+spring:
+  redis:
+    database: 0
+    host: redis.dev.internal.seeyon.site:6379
+    port: 6379

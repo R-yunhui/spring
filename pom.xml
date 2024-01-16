@@ -30,6 +30,7 @@
         <module>spring-webflux</module>
         <module>flink</module>
         <module>study</module>
+        <module>spring-redis</module>
     </modules>
 
     <parent>
