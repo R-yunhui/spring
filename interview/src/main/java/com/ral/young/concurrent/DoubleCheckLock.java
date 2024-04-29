@@ -35,6 +35,8 @@ public class DoubleCheckLock {
                      * 3.初始化对象
                      *
                      * 可以使用 volatile 修饰，保证有序性
+                     *
+                     * volatile：保证可见性和有序性，可见性：会发送一条携带 LOCK 指令的操作将工作内存中的变量刷新到主内存中
                      */
                     instance = new DoubleCheckLock();
                 }

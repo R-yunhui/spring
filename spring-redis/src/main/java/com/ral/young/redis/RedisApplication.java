@@ -2,6 +2,8 @@ package com.ral.young.redis;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.json.JSONUtil;
+import com.ral.young.redis.bo.UserInfo;
 import com.ral.young.redis.config.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -12,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 /**
@@ -31,13 +34,16 @@ public class RedisApplication {
 
         StringRedisTemplate redisTemplate = applicationContext.getBean(StringRedisTemplate.class);
         // 测试并发向 redis 加锁
-        testRedisLock(redisTemplate);
+        // testRedisLock(redisTemplate);
 
         // 测试 redis 实现延迟队列
-        testDelayQueue(redisTemplate);
+        // testDelayQueue(redisTemplate);
 
         // 测试 redis 中 set 的操作
-        testSetOperation(redisTemplate);
+        // testSetOperation(redisTemplate);
+
+        // 测速redis 使用 zset 实现排行榜
+        testRanking(redisTemplate);
 
         // 关闭容器
         applicationContext.close();
@@ -161,5 +167,27 @@ public class RedisApplication {
         Set<String> difference = redisTemplate.opsForSet().difference(key1, key2);
 
         log.info("集合1：{}，集合2：{}，两个集合的交集：{}，两个集合的并集：{}，两个集合的差集：{}", listOne, listTwo, intersect, union, difference);
+    }
+
+    public static void testRanking(StringRedisTemplate redisTemplate) {
+        // 使用 redis 实现排行榜
+        // 使用 zset 实现即可
+        // 模拟数据
+        List<UserInfo> userInfos = new ArrayList<>();
+        IntStream.range(0, 10000).forEach(i -> {
+            int thumbSup = ThreadLocalRandom.current().nextInt(1000) + ThreadLocalRandom.current().nextInt(100);
+            userInfos.add(new UserInfo(IdUtil.getSnowflakeNextId(), thumbSup));
+        });
+
+        // 插入数据
+        String key = "user::thumbSup";
+//        userInfos.forEach(o -> {
+//            redisTemplate.opsForZSet().add(key, String.valueOf(o.getId()), o.getThumbSup());
+//        });
+
+        // 获取分数前 10 的人员id
+        Set<String> strings = redisTemplate.opsForZSet().reverseRange(key, 0, 10);
+        log.info("排行榜分数前10：{}", JSONUtil.toJsonStr(strings));
+
     }
 }
