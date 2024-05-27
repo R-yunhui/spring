@@ -32,6 +32,7 @@
         <module>study</module>
         <module>spring-redis</module>
         <module>spring-boot</module>
+        <module>spring-night</module>
     </modules>
 
     <parent>
