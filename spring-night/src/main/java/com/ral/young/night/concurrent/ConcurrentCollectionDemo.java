@@ -1,5 +1,6 @@
 package com.ral.young.night.concurrent;
 
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,9 +16,20 @@ import java.util.concurrent.TimeUnit;
 public class ConcurrentCollectionDemo {
 
     public static void main(String[] args) {
-
+        String[] ids = new String[]{"11", "  222", " 33 "};
+        for (String id : ids) {
+            // 祛除可能存在的前导空格
+            System.out.println(id);
+        }
+        for (int i = 0, n = ids.length; i < n; i++) {
+            // 祛除可能存在的前导空格
+            ids[i] = ids[i].trim();
+        }
+        for (String id : ids) {
+            // 祛除可能存在的前导空格
+            System.out.println(id);
+        }
     }
-
     public static void testArrayBlockingQueue() {
         /*
          *  必须指定容量
