@@ -1,5 +1,6 @@
 package com.ral.young.night.spring.schedule.service;
 
+import cn.hutool.core.thread.ThreadFactoryBuilder;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class CustomScheduledExecutorService implements ScheduledExecutorService {
 
-    private static final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(5);
+    private static final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(5, ThreadFactoryBuilder.create().setNamePrefix("custom-scheduled-task").build());
 
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {

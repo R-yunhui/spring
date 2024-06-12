@@ -23,6 +23,10 @@ public class ScheduledApplication {
          *
          * 通过 ScheduledAnnotationBeanPostProcessor Bean 的后置处理器进行注解的解析和定时任务的执行
          * 本质是调用 ScheduledExecutorService 的 api 进行定时的调度
+         *
+         * 1.实现 SchedulingConfigurer 设置 setTaskScheduler 线程池，注入一个 bean：ThreadPoolTaskScheduler 修改默认的线程池的配置
+         * 2.实现 ScheduledExecutorService 获取线程池，注入一个 bean：CustomScheduledExecutorService，实现自定义线程池
+         *
          */
 
         applicationContext.refresh();
