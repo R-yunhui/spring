@@ -1,6 +1,7 @@
 package com.ral.young.night.spring.ioc;
 
 import com.ral.young.night.spring.ioc.bean.User;
+import com.ral.young.night.spring.ioc.service.TestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.EventListener;
@@ -46,13 +47,15 @@ public class IocApplication {
          * 9.Bean 准备就绪
          * 10.调用 DisposeBean 的 destroy() 方法
          * 11.调用自定义的 destroy-method 方法
-         *
          */
         User bean = applicationContext.getBean(User.class);
         log.info("从容器中获取到的 User 实例：{}", bean);
 
         Map<String, Object> beansWithEventListener = applicationContext.getBeansWithAnnotation(EventListener.class);
         log.info("容器中所有被 @EventListener 注解的 Bean：{}", beansWithEventListener);
+
+        TestService testService = applicationContext.getBean(TestService.class);
+        testService.testOne();
 
         // 关闭容器
         applicationContext.close();

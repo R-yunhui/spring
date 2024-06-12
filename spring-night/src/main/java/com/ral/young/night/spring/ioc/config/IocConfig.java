@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
-@ComponentScan(value = "com.ral.young.night.spring.ioc.beanpostprocessor")
+@ComponentScan(value = "com.ral.young.night.spring.ioc")
 public class IocConfig {
 
     @Bean(initMethod = "customInitMethod", destroyMethod = "customDestroy")
