@@ -57,6 +57,11 @@ public class IocApplication {
         TestService testService = applicationContext.getBean(TestService.class);
         testService.testOne();
 
+        /*
+         * Prototype 的 Bean 是线程安全的，无状态的 SingleTon 的 Bean 是线程安全的，有状态的 Bean 不是线程安全的
+         * 是否有状态：即没有成员变量或者成员变量只读
+         */
+
         // 关闭容器
         applicationContext.close();
     }
