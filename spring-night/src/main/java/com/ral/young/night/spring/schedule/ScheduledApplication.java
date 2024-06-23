@@ -24,8 +24,14 @@ public class ScheduledApplication {
          * 通过 ScheduledAnnotationBeanPostProcessor Bean 的后置处理器进行注解的解析和定时任务的执行
          * 本质是调用 ScheduledExecutorService 的 api 进行定时的调度
          *
-         * 1.实现 SchedulingConfigurer 设置 setTaskScheduler 线程池，注入一个 bean：ThreadPoolTaskScheduler 修改默认的线程池的配置
+         * 1.实现 SchedulingConfigurer 设置 setTaskScheduler 线程池，注入一个 bean：ThreadPoolTaskScheduler 修改默认的线程池的配置（优先级高）
          * 2.实现 ScheduledExecutorService 获取线程池，注入一个 bean：CustomScheduledExecutorService，实现自定义线程池
+         *
+         * 依赖：ScheduledTaskRegistrar  -  org.springframework.scheduling.config.ScheduledTaskRegistrar.setScheduler
+         *
+         * 具体执行的逻辑：org.springframework.scheduling.config.ScheduledTaskRegistrar.scheduleTasks
+         *
+         * 【注】：没有设置线程池：默认是 Executors.newSingleThreadScheduledExecutor();  最新线程数 Integer.MAX_VALUE
          *
          */
 
