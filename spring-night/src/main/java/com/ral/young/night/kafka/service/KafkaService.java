@@ -39,7 +39,7 @@ public class KafkaService {
     public void sendMessage(String topic, String message) {
         try {
             /*
-             * kafka 发送消息
+             * kafka 发送消息（Main 线程以及 sender 线程 - sender 线程主要就是通过网络通信操作，进行数据的发送和结果额的接收）
              * 1.配置初始化，创建 KafkaProducer 实例
              * 2.经过 拦截器，拦截器对消息进行加工处理 ProducerInterceptor
              * 3.经过 序列化，通过配置的序列化器进行序列化
