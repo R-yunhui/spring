@@ -38,6 +38,15 @@ public class KafkaService {
 
     public void sendMessage(String topic, String message) {
         try {
+            /*
+             * kafka 发送消息
+             * 1.配置初始化，创建 KafkaProducer 实例
+             * 2.经过 拦截器，拦截器对消息进行加工处理 ProducerInterceptor
+             * 3.经过 序列化，通过配置的序列化器进行序列化
+             * 4.经过 分区器，通过配置的分区器进行分区
+             * 5.发送消息追加到内存缓冲区，默认是 16M
+             * 6.提交到 kafka 集群，异步发送，发送成功之后，会回调一个回调函数，返回结果
+             */
             ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, message);
 
             // 等待注册的回调函数的返回值，同步等待结果
