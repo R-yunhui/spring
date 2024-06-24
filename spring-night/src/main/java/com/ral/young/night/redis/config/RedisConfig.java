@@ -24,10 +24,10 @@ public class RedisConfig {
     public LettuceConnectionFactory lettuceConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         // 默认是 0 号数据库，一共 16个数据
-        configuration.setDatabase(10);
+        configuration.setDatabase(0);
         configuration.setPort(6379);
-        configuration.setHostName("redis.dev.internal.seeyon.site");
-        configuration.setPassword("9f776b5be306aaac29b423d9f");
+        configuration.setHostName("101.43.7.180");
+        configuration.setPassword("ryh123.0");
         return new LettuceConnectionFactory(configuration);
     }
 
@@ -43,8 +43,8 @@ public class RedisConfig {
         Config config = new Config();
         config.useSingleServer()
                 .setDatabase(10)
-                .setAddress("redis://redis.dev.internal.seeyon.site:6379")
-                .setPassword("9f776b5be306aaac29b423d9f");
+                .setAddress("redis://101.43.7.180:6379")
+                .setPassword("ryh123.0");
         return Redisson.create(config);
     }
 }
