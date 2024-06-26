@@ -51,6 +51,7 @@ public class RedisApplication {
         // 模拟共同关注（交集 并集 差集）
         testCommonFollow();
 
+        Thread.sleep(100000000);
         applicationContext.close();
     }
 
