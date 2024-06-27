@@ -7,14 +7,15 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author renyunhui
  * @date 2024-06-25 9:41
  * @since 1.0.0
@@ -106,5 +107,30 @@ public class TestService {
             // 做一些业务操作
             Thread.sleep(800);
         }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void testRedisTransactionalAndDbTransactional(String key) {
+        // 如果外层开启了 spring 事务，并且 redisTemplate 设置了 enableTransactionSupport = true
+        // 则 redisTemplate.opsForValue().increment(key) 会在事务提交时才执行，现在获取到的数据为 null
+        // 修改方法：
+        // 1.手动设置  redisTemplate.setEnableTransactionSupport(false);
+        // 2.分开使用 redisTemplate，一个设置 redisTemplate.setEnableTransactionSupport(false); 另一个 redisTemplate.setEnableTransactionSupport(true);
+        Long increment = redisTemplate.opsForValue().increment(key);
+        Optional.ofNullable(increment).ifPresent(i -> {
+            log.info("{} key 自增结果：{}", key, increment);
+        });
+    }
+
+    public void testRedisTransactional() {
+        // 支持 redis 事务
+        redisTemplate.setEnableTransactionSupport(true);
+        redisTemplate.multi();
+
+        // 插入命令
+        redisTemplate.opsForValue().set("testRedisTransactional", "111");
+        redisTemplate.opsForValue().set("testRedisTransactionalTwo", "222");
+
+        redisTemplate.exec();
     }
 }

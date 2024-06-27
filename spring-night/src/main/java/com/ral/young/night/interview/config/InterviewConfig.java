@@ -2,6 +2,7 @@ package com.ral.young.night.interview.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  *
@@ -12,5 +13,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan(value = "com.ral.young.night.interview")
+@EnableTransactionManagement
 public class InterviewConfig {
 }
