@@ -1,18 +1,22 @@
 package com.ral.young.night.redis;
 
+import cn.hutool.core.util.IdUtil;
 import com.google.common.collect.Lists;
 import com.ral.young.night.redis.config.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 /**
- *
  * @author renyunhui
  * @date 2024-06-20 14:09
  * @since 1.0.0
@@ -21,6 +25,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RedisApplication {
 
     private static final AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+
+    private static final List<String> userIdList = new ArrayList<>();
 
     public static void main(String[] args) throws InterruptedException {
         applicationContext.register(RedisConfig.class);
@@ -49,7 +55,11 @@ public class RedisApplication {
         // testRankings();
 
         // 模拟共同关注（交集 并集 差集）
-        testCommonFollow();
+        // testCommonFollow();
+
+        // 测试布隆过滤器
+        initUserInfo();
+        testBloomFilter();
 
         Thread.sleep(100000000);
         applicationContext.close();
@@ -120,5 +130,42 @@ public class RedisApplication {
 
         Set<String> difference = redisTemplate.opsForSet().difference(userOne, userTwo);
         log.info("userOne and userTwo 的非共同关注：{}", difference);
+    }
+
+    public static void testBloomFilter() {
+        RedissonClient redissonClient = applicationContext.getBean(RedissonClient.class);
+        /*
+         * 布隆过滤器：本质是一个位数组，默认是 64 bit，可以设置位数，错误率，初始化元素数量，初始化之后，可以动态添加元素，但是不能动态减少元素
+         * 通过几个 hash 算法计算出一个位置，然后设置位为 1，如果位置为 1，则表示该元素存在，如果位置为 0，则表示该元素不存在
+         * 一般来说，错误率越低，误判率越低，但是空间占用变大
+         *
+         * 布隆过滤器里面存在，但是数据库可能不存在，布隆过滤器不存在，数据库一定存在
+         */
+        RBloomFilter<String> bloomFilter = redissonClient.getBloomFilter("test::bloomFilter");
+        // 初始化 bloomFilter  预期元素插入量：100000  错误率：0.03
+        bloomFilter.tryInit(100000, 0.03);
+        // 初始化 100000 数据
+        userIdList.forEach(bloomFilter::add);
+        log.info("bloomFilter count：{}", bloomFilter.count());
+
+        // 随机使用几个元素看看 bloomFilter 是否存在
+        for (int i = 0; i < 10; i++) {
+            String userId = userIdList.get(ThreadLocalRandom.current().nextInt(userIdList.size()));
+            log.info("one bloomFilter contains {}：{}", userId, bloomFilter.contains(userId));
+        }
+
+        // 在使用几个不存在的元素看看 bloomFilter 是否存在
+        for (int i = 0; i < 10; i++) {
+            String userId = IdUtil.getSnowflakeNextIdStr();
+            boolean contains = bloomFilter.contains(userId);
+            if (contains) {
+                log.info("two bloomFilter contains {}", userId);
+                log.info("two userIdList contains {}：{}", userId, userIdList.contains(userId));
+            }
+        }
+    }
+
+    public static void initUserInfo() {
+        IntStream.range(0, 100000).forEach(i -> userIdList.add(IdUtil.getSnowflakeNextIdStr()));
     }
 }
