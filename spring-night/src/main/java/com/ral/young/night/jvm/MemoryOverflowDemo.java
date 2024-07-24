@@ -16,14 +16,14 @@ public class MemoryOverflowDemo {
 
     static List<Object> objects;
     public static void main(String[] args) throws CannotCompileException, InstantiationException, IllegalAccessException {
-        // testHeadOutOfMemory();
+        // testHeapOutOfMemory();
 
         // testStackOutOfMemory(1);
 
         testMethodAreaOutOfMemory(DeadLockDemo.class);
     }
 
-    public static void testHeadOutOfMemory() {
+    public static void testHeapOutOfMemory() {
         // -Xmx10M -Xms10M -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError
         objects = new ArrayList<>();
         while (true) {
@@ -40,7 +40,7 @@ public class MemoryOverflowDemo {
 
     public static void testMethodAreaOutOfMemory(Class<?> clazz) throws InstantiationException, IllegalAccessException {
         for (int i = 0; ; i++) {
-            // 创建大量的类导致发放区内存移除
+            // 创建大量的类导致方法区内存溢出
             Object object = clazz.newInstance();
         }
     }
