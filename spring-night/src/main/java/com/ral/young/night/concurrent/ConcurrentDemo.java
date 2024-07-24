@@ -14,6 +14,11 @@ public class ConcurrentDemo {
 
     public static void main(String[] args) throws InterruptedException {
         /*
+         * 三大特性
+         * 1.原子性
+         * 2.可见性
+         * 3.有序性
+         *
          * volatile：保证可见性和有序性
          *      1.通过内存屏障来禁止指令重排，保证有序性
          *      2.通过JVM向处理器发送一条带 LOCK 前缀的指令，将这个缓存中的变量回写到系统内存中。

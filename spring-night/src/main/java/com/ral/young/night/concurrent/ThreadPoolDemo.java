@@ -33,6 +33,18 @@ public class ThreadPoolDemo {
     }
 
     public static void main(String[] args) throws InterruptedException {
+        /*
+         * Executors
+         * 1.Executors.newFixedThreadPool() 创建一个固定大小的线程池
+         * 2.Executors.newSingleThreadExecutor() 创建一个单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。
+         * 1 和 2 都是任务队列是一个 LinkedBlockingQueue 大小为 Integer.MAX_VALUE 可能导致 OOM
+         *
+         * 3.Executors.newCachedThreadPool() 创建一个可缓存线程池，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程。
+         * 4.Executors.newScheduledThreadPool() 创建一个定长线程池，支持定时及周期性任务执行。
+         * 3 和 4 都是最大线程数为 Integer.MAX_VALUE，可能导致 OOM
+         */
+
+
         // 模拟存放任务的队列
         ArrayBlockingQueue<String> arrayBlockingQueue = new ArrayBlockingQueue<>(30);
         IntStream.range(0, 30).forEach(i -> arrayBlockingQueue.add(IdUtil.fastSimpleUUID()));
