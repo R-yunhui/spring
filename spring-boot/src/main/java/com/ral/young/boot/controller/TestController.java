@@ -18,8 +18,13 @@ public class TestController {
     @Resource
     private TestService testService;
 
-    @GetMapping(value = "/test/{code}")
-    public String test(@PathVariable(value = "code") int code) {
+    @GetMapping(value = "/updateData/{code}")
+    public String updateData(@PathVariable(value = "code") int code) {
         return testService.updateData(code);
+    }
+
+    @GetMapping(value = "/updateToken/{token}")
+    public String updateToken(@PathVariable(value = "token") String token) {
+        return testService.updateToken(token);
     }
 }
