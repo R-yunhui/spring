@@ -3,6 +3,7 @@ package com.ral.young.night.redis;
 import cn.hutool.core.util.IdUtil;
 import com.google.common.collect.Lists;
 import com.ral.young.night.redis.config.RedisConfig;
+import com.ral.young.night.redis.service.TestService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
@@ -58,8 +59,11 @@ public class RedisApplication {
         // testCommonFollow();
 
         // 测试布隆过滤器
-        initUserInfo();
-        testBloomFilter();
+        // initUserInfo();
+        // testBloomFilter();
+
+        TestService bean = applicationContext.getBean(TestService.class);
+        bean.testDelayQueue();
 
         Thread.sleep(100000000);
         applicationContext.close();

@@ -1,7 +1,5 @@
 package com.ral.young.night.jvm;
 
-import javassist.CannotCompileException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +13,7 @@ import java.util.List;
 public class MemoryOverflowDemo {
 
     static List<Object> objects;
-    public static void main(String[] args) throws CannotCompileException, InstantiationException, IllegalAccessException {
+    public static void main(String[] args) throws Exception {
         // testHeapOutOfMemory();
 
         // testStackOutOfMemory(1);
