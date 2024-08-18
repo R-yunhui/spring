@@ -60,6 +60,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return column;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateBatchUser() {
+        List<User> users = generateUserInfo(10);
+        saveBatch(users);
+
+        users.forEach(user -> user.setName(user.getName() + "update"));
+
+        int i = userMapper.batchUpdateUserName(users);
+        log.info("修改成功的数据为：{}", i);
+        return i;
+    }
+
     private List<User> generateUserInfo(int size) {
         List<User> users = new ArrayList<>();
         IntStream.range(0, size).forEach(o -> {

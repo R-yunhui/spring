@@ -18,4 +18,10 @@ public interface UserService extends IService<User> {
      * @return 成功初始化用户的数量
      */
     int initUserInfo(int size);
+
+    /**
+     * 批量修改用户信息
+     * @return 修改成功的行数
+     */
+    int updateBatchUser();
 }

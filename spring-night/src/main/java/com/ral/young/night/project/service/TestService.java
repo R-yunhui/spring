@@ -55,9 +55,7 @@ public class TestService implements ApplicationContextAware, CommandLineRunner {
     }
 
     public void test() {
-        userList.forEach(user -> {
-            log.info("用户信息：{}", user);
-        });
+        userList.forEach(user -> log.info("用户信息：{}", user));
     }
 
     @Override
@@ -74,11 +72,12 @@ public class TestService implements ApplicationContextAware, CommandLineRunner {
             log.info("构造：{} 用户数据完成", initUserSize);
         }
         applicationEventPublisher.publishEvent(new InitUserEvent(initUserSize));
+        userService.updateBatchUser();
         TimeUnit.MINUTES.sleep(10);
     }
 
     @EventListener
     public void testTwo(InitUserEvent event) {
-        log.info("监听到初始化用户数据完成，初始化用户数量：" + event.getInitUserSize());
+        log.info("监听到初始化用户数据完成，初始化用户数量：{}" , event.getInitUserSize());
     }
 }
