@@ -3,6 +3,9 @@ package com.ral.young.boot;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * SpringBoot 启动类
@@ -12,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 1.0.0
  */
 @SpringBootApplication
+@EnableScheduling
 public class Application {
 
     public static void main(String[] args) {
@@ -26,5 +30,10 @@ public class Application {
         // 设置 Banner 输出的位置
         application.setBannerMode(Banner.Mode.CONSOLE);
         application.run();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }

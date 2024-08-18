@@ -2,3 +2,10 @@ spring:
   banner:
     image:
       location: banner.txt
+
+scheduled:
+  fixedRateTime: 20000
+  initialDelayTimeOne: 20000
+  initialDelayTimeTwo: 25000
+  initialDelayTimeThree: 30000
+  initialDelayTimeFour: 35000

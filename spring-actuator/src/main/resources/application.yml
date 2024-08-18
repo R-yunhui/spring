@@ -1,0 +1,34 @@
+server:
+  port: 20080
+  # 暴露 tomcat 的 mbean
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  banner:
+    location: banner.txt
+  application:
+    name: spring-boot-actuator
+  resources:
+    static-locations: file:D:\\ryh\\personal\\workspace\\theme.park 
+
+# 暴露所有端点
+management:
+  server:
+    port: 20081
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  # 将监控指标暴露给 prometheus ，启用导出器
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+
+
+

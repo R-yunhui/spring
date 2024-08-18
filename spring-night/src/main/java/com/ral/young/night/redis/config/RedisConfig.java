@@ -4,6 +4,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * @since 1.0.0
  */
 @Configuration
+@ComponentScan(value = "com.ral.young.night.redis")
 public class RedisConfig {
 
     @Bean
