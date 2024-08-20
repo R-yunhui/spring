@@ -11,7 +11,22 @@ spring:
   application:
     name: spring-boot-actuator
   resources:
-    static-locations: file:D:\\ryh\\personal\\workspace\\theme.park 
+    static-locations: file:D:\\ryh\\personal\\workspace\\theme.park
+  # redis 配置
+  redis:
+    host: 101.43.7.180
+    port: 6379
+    password: ryh123.0
+    lettuce:
+      pool:
+        # 连接池最大连接数
+        max-active: 20
+        # 连接池最大空闲时间
+        max-idle: 20
+        # 连接池最小连接数
+        min-idle: 3
+        # 连接池最大等待时间
+        max-wait: -1
 
 # 暴露所有端点
 management:
@@ -28,6 +43,17 @@ management:
         enabled: true
     tags:
       application: ${spring.application.name}
+
+# prometheus 地址
+prometheus:
+  address: http://127.0.0.1:9090
+
+scheduled:
+  fixedRateTime: 5000
+  initialDelayTimeOne: 5000
+  initialDelayTimeTwo: 6000
+  initialDelayTimeThree: 7000
+  initialDelayTimeFour: 8000
 
 
 

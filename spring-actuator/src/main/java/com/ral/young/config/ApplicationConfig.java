@@ -2,6 +2,10 @@ package com.ral.young.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -13,7 +17,7 @@ import org.springframework.web.filter.CorsFilter;
  * @since 1.0.0
  */
 @Configuration
-public class GlobalCorsConfig {
+public class ApplicationConfig implements SchedulingConfigurer {
 
     @Bean
     public CorsFilter corsFilter() {
@@ -32,6 +36,28 @@ public class GlobalCorsConfig {
         corsConfigurationSource.registerCorsConfiguration("/**", config);
         // 3. 返回新的CorsFilter
         return new CorsFilter(corsConfigurationSource);
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
+    public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+        threadPoolTaskScheduler.setPoolSize(10);
+        threadPoolTaskScheduler.setThreadNamePrefix("push-alarm-scheduled-task-");
+        // 优雅停机
+        threadPoolTaskScheduler.setWaitForTasksToCompleteOnShutdown(true);
+        // 等待终止时间
+        threadPoolTaskScheduler.setAwaitTerminationMillis(60);
+        return threadPoolTaskScheduler;
+    }
+
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        taskRegistrar.setTaskScheduler(threadPoolTaskScheduler());
     }
 }
 

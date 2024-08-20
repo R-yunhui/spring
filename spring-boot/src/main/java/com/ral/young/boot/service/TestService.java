@@ -31,7 +31,7 @@ public class TestService {
 
     private boolean taskFourEnable = true;
 
-    private String token = "1nxzN5bhC8dI3WdMW33D7yqCTHnyTagJ_S7vwfnk";
+    private String token = "n2zrARX2gt74ECHcU_sU7ZqG-Lx1z1u5sfsavrsV";
 
     @Resource
     private RestTemplate restTemplate;
