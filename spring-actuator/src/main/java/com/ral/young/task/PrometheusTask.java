@@ -6,7 +6,7 @@ import com.ral.young.bo.QueryMetricsResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -37,76 +37,47 @@ public class PrometheusTask {
     @Resource
     private RestTemplate restTemplate;
 
-    @Resource
-    private RedisTemplate<String, String> redisTemplate;
+    @Resource(name = "stringRedisTemplate")
+    private StringRedisTemplate redisTemplate;
+
+    /**
+     * 学习中心从 Prometheus 获取 gpu 指标 key
+     */
+    public static final String REDIS_LEARN_PROMETHEUS_METRICS = "learn:prometheus:gpu:metrics:";
 
     private static final String QUERY_METRICS_URL = "/api/v1/query?query=";
 
     @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeOne}")
-    public void queryFormPrometheusOne() {
+    public void queryGpuTotalSize() {
         String metricsTag = "nvidia_smi_memory_total_bytes";
-        MetricsQuery metricsQuery = buildMetricsQuery(metricsTag);
-        String url = prometheusUrl + QUERY_METRICS_URL + metricsTag;
-        StringBuilder builder = new StringBuilder(url);
-        buildQueryTag(metricsQuery.getLabelMap(), builder);
-
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(builder.toString()).build();
-        ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
-        QueryMetricsResult body = entity.getBody();
-        log.info("本次查询 prometheus 的 url：{}", uriComponents.toUriString());
-        if (HttpStatus.OK.value() == entity.getStatusCodeValue() && null != body) {
-            redisTemplate.opsForValue().set(metricsTag, JSONUtil.toJsonStr(body.getData()));
-        }
+        queryFromPrometheus(metricsTag);
     }
 
     @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeTwo}")
-    public void queryFormPrometheusTwo() {
+    public void queryGpuUsedBytes() {
         String metricsTag = "nvidia_smi_memory_used_bytes";
-        MetricsQuery metricsQuery = buildMetricsQuery(metricsTag);
-        String url = prometheusUrl + QUERY_METRICS_URL + metricsTag;
-        StringBuilder builder = new StringBuilder(url);
-        buildQueryTag(metricsQuery.getLabelMap(), builder);
-
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(builder.toString()).build();
-        ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
-        QueryMetricsResult body = entity.getBody();
-        log.info("本次查询 prometheus 的 url：{}", uriComponents.toUriString());
-        if (HttpStatus.OK.value() == entity.getStatusCodeValue() && null != body) {
-            redisTemplate.opsForValue().set(metricsTag, JSONUtil.toJsonStr(body.getData()));
-        }
+        queryFromPrometheus(metricsTag);
     }
 
     @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeThree}")
-    public void queryFormPrometheusThree() {
-        String metricsTag = "nvidia_smi_temperature_gpu";
-        MetricsQuery metricsQuery = buildMetricsQuery(metricsTag);
-        String url = prometheusUrl + QUERY_METRICS_URL + metricsTag;
-        StringBuilder builder = new StringBuilder(url);
-        buildQueryTag(metricsQuery.getLabelMap(), builder);
-
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(builder.toString()).build();
-        ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
-        QueryMetricsResult body = entity.getBody();
-        log.info("本次查询 prometheus 的 url：{}", uriComponents.toUriString());
-        if (HttpStatus.OK.value() == entity.getStatusCodeValue() && null != body) {
-            redisTemplate.opsForValue().set(metricsTag, JSONUtil.toJsonStr(body.getData()));
-        }
+    public void queryGpuIndex() {
+        String metricsTag = "nvidia_smi_index";
+        queryFromPrometheus(metricsTag);
     }
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeFour}")
-    public void queryFormPrometheusFour() {
-        String metricsTag = "nvidia_smi_index";
+    private void queryFromPrometheus(String metricsTag) {
         MetricsQuery metricsQuery = buildMetricsQuery(metricsTag);
         String url = prometheusUrl + QUERY_METRICS_URL + metricsTag;
         StringBuilder builder = new StringBuilder(url);
         buildQueryTag(metricsQuery.getLabelMap(), builder);
+        log.info("本次查询 prometheus 的 url：{}", builder);
 
         UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(builder.toString()).build();
         ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
         QueryMetricsResult body = entity.getBody();
-        log.info("本次查询 prometheus 的 url：{}", uriComponents.toUriString());
         if (HttpStatus.OK.value() == entity.getStatusCodeValue() && null != body) {
-            redisTemplate.opsForValue().set(metricsTag, JSONUtil.toJsonStr(body.getData()));
+            String redisKey = REDIS_LEARN_PROMETHEUS_METRICS + metricsTag;
+            redisTemplate.opsForValue().set(redisKey, JSONUtil.toJsonStr(body.getData()));
         }
     }
 

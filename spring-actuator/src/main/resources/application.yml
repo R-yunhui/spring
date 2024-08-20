@@ -49,11 +49,10 @@ prometheus:
   address: http://127.0.0.1:9090
 
 scheduled:
-  fixedRateTime: 5000
+  fixedRateTime: 30000
   initialDelayTimeOne: 5000
   initialDelayTimeTwo: 6000
   initialDelayTimeThree: 7000
-  initialDelayTimeFour: 8000
 
 
 
