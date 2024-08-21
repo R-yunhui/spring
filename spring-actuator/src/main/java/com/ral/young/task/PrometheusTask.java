@@ -1,5 +1,6 @@
 package com.ral.young.task;
 
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.ral.young.bo.MetricsQuery;
 import com.ral.young.bo.QueryMetricsResult;
@@ -18,6 +19,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Resource;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +32,17 @@ import java.util.Map;
 @Component
 @Slf4j
 public class PrometheusTask {
+
+    public static void main(String[] args) {
+        String msg = "{\"ts\":\"1724141598740\",\"url\":\"/group1/certificate/20240820/08/13/1/2024-08-20-16-13-19_1823567221934608385_VideoRecording_0efe1e4a5ecc11ef90aae8136efe4cb2.mp4\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\",\"alarmName\":\"水位检测\"},\"zoom\":0,\"boxes\":[],\"extra\":{\"itemsInBox\":[{\"confidence\":0.10000000149011612}]},\"scene\":\"/group1/alarm/20240820/08/13/1/scene-14be023d9f2a4750939b3068256faf5f.jpg?download=0\",\"score\":0.1,\"preset\":{\"id\":\"-1\",\"ptz\":\"\",\"name\":\"\",\"deviceCode\":\"51010400001311620763\",\"deviceName\":\"新疆测试\",\"channelCode\":\"51010400001310000084\",\"channelName\":\"新疆测试_0\"},\"taskId\":\"1825771319414628353\",\"channel\":{\"height\":1,\"eastPan\":0,\"orgCode\":\"1823257414592516098_1823564227871395842\",\"latitude\":0,\"northPan\":0,\"tenantId\":\"1823257414143725570\",\"longitude\":0,\"pitchAngle\":0,\"channelName\":\"新疆测试_0\",\"xCoordinate\":49.75547791,\"yCoordinate\":49.73924381,\"zCoordinate\":0,\"dueNorthAngle\":90,\"verticalFieldOfView\":0,\"horizontalFieldOfView\":0},\"eventID\":\"0efe1e4a5ecc11ef90aae8136efe4cb2\",\"cameraId\":\"1823567221934608385\",\"alarmType\":\"WaterLevel\",\"taskParam\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\",\"alarmName\":\"水位检测\"},\"normalType\":false,\"sceneWidth\":1920,\"sceneHeight\":1080,\"abilityParams\":{\"id\":\"1825416036079501313\",\"eNum\":6,\"minBox\":{\"width\":10,\"height\":10},\"eMetres\":0.5,\"interval\":2,\"areaBoxes\":[],\"threshold\":0.25,\"periodTimes\":[{\"endTime\":\"23:00\",\"startTime\":\"09:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"alarmInterval\":10,\"setLineMetres\":10,\"alarmThresholdMetres\":11},\"alarmVideoStop\":\"281444919292904\",\"alarmVideoStart\":\"187659950757260\",\"alarmEventStatus\":1,\"curCollectionData\":null}";
+        JSONObject object = JSONUtil.parseObj(msg);
+        Float curCollectionData = object.getFloat("curCollectionData");
+        if (null != curCollectionData) {
+            DecimalFormat df = new DecimalFormat("#.00");
+            String result = df.format(curCollectionData);
+            System.out.println(result);
+        }
+    }
 
     @Value("${prometheus.address}")
     private String prometheusUrl;

@@ -2,7 +2,6 @@ package com.ral.young;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author renyunhui
@@ -11,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @since 1.0.0
  */
 @SpringBootApplication
-@EnableScheduling
+// @EnableScheduling
 public class ActuatorApplication {
 
     public static void main(String[] args) {
