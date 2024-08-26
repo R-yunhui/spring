@@ -21,9 +21,5 @@ public class ClusterCpuCoreInfo {
 
     private Double usageCpuCore;
 
-    private long timestamp;
-
-    private String time;
-
     private String nodeName;
 }

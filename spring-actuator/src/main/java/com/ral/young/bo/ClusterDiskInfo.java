@@ -21,7 +21,5 @@ public class ClusterDiskInfo {
 
     private Double usageDiskSize;
 
-    private long timestamp;
-
-    private String time;
+    private String nodeName;
 }

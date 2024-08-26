@@ -9,24 +9,38 @@ import lombok.*;
  * @since 1.0.0
  */
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MetricsQueryRange extends MetricsQueryBase {
+public class MetricsQueryRange {
 
     /**
-     * 开始时间戳 IOS-8601 格式
+     * 开始时间戳 unix_time
      */
     private String start;
 
     /**
-     * 结束时间戳 IOS-8601 格式
+     * 结束时间戳 unix_time
      */
     private String end;
+
+    /**
+     * 指标名称
+     */
+    private String metricsTag;
 
     /**
      * 以持续时间格式或浮点秒数为分辨率步长进行查询
      */
     private Float step;
+
+    /**
+     * 节点名称，默认为 ALL
+     */
+    private String nodeName;
+
+    /**
+     * 节点实力的 IP:PORT
+     */
+    private String instance;
 }

@@ -5,9 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * @author renyunhui
- * @description 这是一个ClusterMemoryInfo类
+ * @description ClusterNetworkDetail
  * @date 2024-08-21 15-44-20
  * @since 1.0.0
  */
@@ -15,15 +17,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ClusterNetworkInfo {
-
-    private Integer acceptedSize;
-
-    private Integer sendSize;
-
-    private long timestamp;
-
-    private String time;
+public class ClusterNetworkDetail {
 
     private String nodeName;
+
+    private Map<Long, Double> receiveBytes;
+
+    private Map<Long, Double> sendBytes;
 }

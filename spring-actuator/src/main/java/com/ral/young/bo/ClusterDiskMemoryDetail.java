@@ -5,23 +5,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * @author renyunhui
- * @description 这是一个ClusterNodeStatus类
- * @date 2024-08-21 14-59-26
+ * @description 这是一个ClusteCpuDetail类
+ * @date 2024-08-22 10-22-25
  * @since 1.0.0
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ClusterNodeStatus {
-
-    private Integer readyNode;
-
-    private Integer failNode;
-
-    private Integer allNode;
+public class ClusterDiskMemoryDetail {
 
     private String nodeName;
+
+    /**
+     * 磁盘使用情况 key：时间戳 value：磁盘使用率
+     */
+    private Map<Long, Double> diskDetailMap;
 }

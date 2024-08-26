@@ -21,9 +21,5 @@ public class ClusterMemoryInfo {
 
     private Double usageMemorySize;
 
-    private long timestamp;
-
-    private String time;
-
     private String nodeName;
 }
