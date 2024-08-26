@@ -22,6 +22,16 @@ public class TestController {
     @Resource
     private ResourceMonitorService resourceMonitorService;
 
+    @GetMapping(value = "/clusterNodeInfo")
+    public List<ClusterNodeInfo> clusterNodeInfo() {
+        return resourceMonitorService.queryClusterNodeInfo();
+    }
+
+    @GetMapping(value = "/gpuInfo/{nodeName}")
+    public List<GpuInfo> gpuInfo(@PathVariable(value = "nodeName") String nodeName) {
+        return resourceMonitorService.queryGpuInfo(nodeName);
+    }
+
     @GetMapping(value = "/nodeStatus/{nodeName}/{start}/{end}")
     public List<ClusterNodeStatus> clusterNodeStatus(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
         MetricsQueryRange metricsQueryRange = new MetricsQueryRange();

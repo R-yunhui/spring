@@ -88,5 +88,28 @@ public class PrometheusMetricsConstant {
      */
     public static final String SUM_IRATE_CONTAINER_FS_WRITE_BYTES_TOTAL = "sum(irate(container_fs_write_bytes_total{origin_prometheus=~\"\",node=~\"$nodeName$\",namespace=~\".*\"}[2m]))*8";
 
+    /**
+     * 节点资源信息
+     */
+    public static final String NODE_UNAME_INFO = "node_uname_info";
 
+    /**
+     * 通过 dcgm-exporter 采集的 gpu 利用率
+     */
+    public static final String DCGM_FI_DEV_GPU_UTIL = "DCGM_FI_DEV_GPU_UTIL{Hostname=~\"$nodeName$\"}";
+
+    /**
+     * gpu 使用率
+     */
+    public static final String DCGM_GPU_USED_UTIL_RATIO = "sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname) / (sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname) + sum(DCGM_FI_DEV_FB_FREE{Hostname=\"$nodeName$\"}) by (Hostname))";
+
+    /**
+     * gpu 内存使用量
+     */
+    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname)";
+
+    /**
+     * gpu 空闲内存
+     */
+    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=\"$nodeName$\"}) by (Hostname)";
 }

@@ -7,23 +7,23 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author renyunhui
- * @description 这是一个ClusterNodeInfo类
- * @date 2024-08-22 17-40-08
+ * @description 统计 gpu 利用率
+ * @date 2024-08-26 09-30-02
  * @since 1.0.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class ClusterNodeInfo {
+@Data
+public class GpuInfo {
 
-    /**
-     * 节点名称
-     */
     private String nodeName;
 
-    /**
-     * 节点实例信息
-     */
-    private String nodeInstance;
+    private String instance;
+
+    private String gpuIndex;
+
+    private Double gpuUtilizationRate;
+
+    private Boolean canSelect;
 }

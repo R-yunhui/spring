@@ -1,10 +1,12 @@
 package com.ral.young.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.json.JSONUtil;
 import com.ral.young.bo.*;
 import com.ral.young.constant.PrometheusMetricsConstant;
 import com.ral.young.service.ResourceMonitorService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,11 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author renyunhuiCluster node status
@@ -26,14 +32,31 @@ import java.util.*;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private static final String PROMETHEUS_URL = "http://192.168.36:39090/api/v1/";
+    private static final String PROMETHEUS_URL = "http://192.168.2.36:39090/api/v1/";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "query_range?query=";
+
+    private static final String PROMETHEUS_QUERY_URL = "query?query=";
 
     private static final String NODE = "node";
 
     @Resource
     private RestTemplate restTemplate;
+
+    private QueryMetricsResult queryFromPrometheus(MetricsQuery metricsQuery) {
+        String metricsTag = metricsQuery.getMetricsTag();
+        String url = PROMETHEUS_URL + PROMETHEUS_QUERY_URL + metricsTag;
+        StringBuilder urlBuilder = new StringBuilder(url);
+        urlBuilder.append("&time=").append(metricsQuery.getDateTime());
+
+        log.info("本次 queryFromPrometheus 的 url：{}", urlBuilder);
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(urlBuilder.toString()).build();
+        ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
+        QueryMetricsResult body = entity.getBody();
+        log.info("queryFromPrometheus 的结果：{}", JSONUtil.toJsonStr(body));
+        return body;
+    }
+
 
     private QueryRangeMetricsResult queryRangeFromPrometheus(MetricsQueryRange metricsQueryRange) {
         String metricsTag = metricsQueryRange.getMetricsTag();
@@ -53,7 +76,49 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     @Override
     public List<ClusterNodeInfo> queryClusterNodeInfo() {
-        return Collections.emptyList();
+        MetricsQuery metricsQuery = new MetricsQuery();
+        metricsQuery.setDateTime(getCurDateTime());
+        metricsQuery.setMetricsTag(PrometheusMetricsConstant.NODE_UNAME_INFO);
+        QueryMetricsResult queryMetricsResult = queryFromPrometheus(metricsQuery);
+        List<ClusterNodeInfo> clusterNodeInfoList = new ArrayList<>();
+        if (ObjectUtil.isNotEmpty(queryMetricsResult)) {
+            List<QueryMetricsResult.DataDTO.ResultDTO> result = queryMetricsResult.getData().getResult();
+            for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : result) {
+                Map<String, String> metric = resultDTO.getMetric();
+                clusterNodeInfoList.add(ClusterNodeInfo.builder()
+                        .nodeInstance(metric.get("instance"))
+                        .nodeName(metric.get("nodename"))
+                        .build()
+                );
+            }
+        }
+        return clusterNodeInfoList;
+    }
+
+    @Override
+    public List<GpuInfo> queryGpuInfo(String nodeName) {
+        MetricsQuery metricsQuery = new MetricsQuery();
+        metricsQuery.setDateTime(getCurDateTime());
+        String metricsTag = StringUtils.equals(nodeName, "all") ? PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME) : PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
+        metricsQuery.setMetricsTag(metricsTag);
+        QueryMetricsResult queryMetricsResult = queryFromPrometheus(metricsQuery);
+        List<GpuInfo> gpuInfoList = new ArrayList<>();
+        if (ObjectUtil.isNotEmpty(queryMetricsResult)) {
+            List<QueryMetricsResult.DataDTO.ResultDTO> result = queryMetricsResult.getData().getResult();
+            for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : result) {
+                Map<String, String> metric = resultDTO.getMetric();
+                List<Double> value = resultDTO.getValue();
+                gpuInfoList.add(GpuInfo.builder()
+                        .nodeName(metric.getOrDefault("Hostname", nodeName))
+                        .instance(metric.get("instance"))
+                        .gpuIndex(metric.get("gpu"))
+                        .gpuUtilizationRate(value.get(1))
+                        .canSelect(value.get(1) > 0)
+                        .build()
+                );
+            }
+        }
+        return gpuInfoList;
     }
 
     @Override
@@ -322,5 +387,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         }
         log.info("查询集群节点网络使用情况耗时：{} ms", System.currentTimeMillis() - start);
         return clusterNetworkDetails;
+    }
+
+    private String getCurDateTime() {
+        long timeMillis = System.currentTimeMillis();
+        double timeStampWithDecimal = timeMillis / 1000.0;
+        DecimalFormat decimalFormat = new DecimalFormat("#.###");
+        return decimalFormat.format(timeStampWithDecimal);
     }
 }

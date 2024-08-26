@@ -20,6 +20,14 @@ public interface ResourceMonitorService {
     List<ClusterNodeInfo> queryClusterNodeInfo();
 
     /**
+     * 查询 gpu 信息
+     *
+     * @param nodeName 查询的node 名称
+     * @return gpu信息
+     */
+    List<GpuInfo> queryGpuInfo(String nodeName);
+
+    /**
      * 查询集群节点状态
      *
      * @param metricsQueryRange 查询条件
