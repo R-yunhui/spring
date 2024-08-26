@@ -9,21 +9,17 @@ import java.util.Map;
 
 /**
  * @author renyunhui
- * @description ClusterNetworkDetail
- * @date 2024-08-21 15-44-20
+ * @description gpu内存信息
+ * @date 2024-08-26 14-26-23
  * @since 1.0.0
  */
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
-public class ClusterNetworkDetail {
+public class GpuMemoryDetail {
 
     private String nodeName;
 
-    private String instance;
-
-    private Map<Long, Double> receiveBytes;
-
-    private Map<Long, Double> sendBytes;
+    private Map<Long, Double> memoryUsageMap;
 }

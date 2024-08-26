@@ -21,6 +21,8 @@ public class ClusterDiskIoDetail {
 
     private String nodeName;
 
+    private String instance;
+
     private Map<Long, Double> receiveBytes;
 
     private Map<Long, Double> sendBytes;

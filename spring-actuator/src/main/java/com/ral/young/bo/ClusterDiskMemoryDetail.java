@@ -21,6 +21,8 @@ public class ClusterDiskMemoryDetail {
 
     private String nodeName;
 
+    private String instance;
+
     /**
      * 磁盘使用情况 key：时间戳 value：磁盘使用率
      */

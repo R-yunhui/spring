@@ -1,7 +1,6 @@
 package com.ral.young.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.json.JSONUtil;
 import com.ral.young.bo.*;
 import com.ral.young.constant.PrometheusMetricsConstant;
 import com.ral.young.service.ResourceMonitorService;
@@ -40,6 +39,16 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private static final String NODE = "node";
 
+    private static final String NODE_NAME_TAG = "nodename";
+
+    private static final String ALL_TAG = "all";
+
+    private static final String INSTANCE_TAG = "instance";
+
+    private static final String GPU_TAG = "gpu";
+
+    private static final String HOST_NAME_TAG = "Hostname";
+
     @Resource
     private RestTemplate restTemplate;
 
@@ -49,18 +58,17 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         StringBuilder urlBuilder = new StringBuilder(url);
         urlBuilder.append("&time=").append(metricsQuery.getDateTime());
 
-        log.info("本次 queryFromPrometheus 的 url：{}", urlBuilder);
+        log.info("queryFromPrometheus 的 url：{}", urlBuilder);
         UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(urlBuilder.toString()).build();
         ResponseEntity<QueryMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryMetricsResult.class);
-        QueryMetricsResult body = entity.getBody();
-        log.info("queryFromPrometheus 的结果：{}", JSONUtil.toJsonStr(body));
-        return body;
+        return entity.getBody();
     }
 
 
     private QueryRangeMetricsResult queryRangeFromPrometheus(MetricsQueryRange metricsQueryRange) {
         String metricsTag = metricsQueryRange.getMetricsTag();
-        metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, "all".equals(metricsQueryRange.getNodeName()) ? PrometheusMetricsConstant.ALL_NODE_NAME : metricsQueryRange.getNodeName());
+        metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, ALL_TAG.equals(metricsQueryRange.getNodeName()) ? PrometheusMetricsConstant.ALL_NODE_NAME : metricsQueryRange.getNodeName());
+        metricsTag = metricsTag.replace(PrometheusMetricsConstant.INSTANCE_NAME_REPLACE_TAG, ALL_TAG.equals(metricsQueryRange.getInstance()) ? PrometheusMetricsConstant.ALL_NODE_NAME : metricsQueryRange.getInstance());
         String url = PROMETHEUS_URL + PROMETHEUS_QUERY_RANGE_URL + metricsTag;
         StringBuilder urlBuilder = new StringBuilder(url);
 
@@ -86,8 +94,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : result) {
                 Map<String, String> metric = resultDTO.getMetric();
                 clusterNodeInfoList.add(ClusterNodeInfo.builder()
-                        .nodeInstance(metric.get("instance"))
-                        .nodeName(metric.get("nodename"))
+                        .nodeInstance(metric.get(INSTANCE_TAG))
+                        .nodeName(metric.get(NODE_NAME_TAG))
                         .build()
                 );
             }
@@ -99,7 +107,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<GpuInfo> queryGpuInfo(String nodeName) {
         MetricsQuery metricsQuery = new MetricsQuery();
         metricsQuery.setDateTime(getCurDateTime());
-        String metricsTag = StringUtils.equals(nodeName, "all") ? PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME) : PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
+        String metricsTag = StringUtils.equals(nodeName, ALL_TAG) ? PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME) : PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
         metricsQuery.setMetricsTag(metricsTag);
         QueryMetricsResult queryMetricsResult = queryFromPrometheus(metricsQuery);
         List<GpuInfo> gpuInfoList = new ArrayList<>();
@@ -109,9 +117,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 Map<String, String> metric = resultDTO.getMetric();
                 List<Double> value = resultDTO.getValue();
                 gpuInfoList.add(GpuInfo.builder()
-                        .nodeName(metric.getOrDefault("Hostname", nodeName))
-                        .instance(metric.get("instance"))
-                        .gpuIndex(metric.get("gpu"))
+                        .nodeName(metric.getOrDefault(HOST_NAME_TAG, nodeName))
+                        .instance(metric.get(INSTANCE_TAG))
+                        .gpuIndex(metric.get(GPU_TAG))
                         .gpuUtilizationRate(value.get(1))
                         .canSelect(value.get(1) > 0)
                         .build()
@@ -154,12 +162,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterMemoryInfo> queryMemoryUsage(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // 集群总内存：sum(kube_node_status_allocatable{origin_prometheus=~"",resource="memory", unit="byte", node=~"^.*$"})
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_KUBE_NODE_STATUS_ALLOCATABLE_MEMORY);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_TOTAL_MEMORY);
         QueryRangeMetricsResult allMemoryQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
-        // 集群已使用内存：sum(container_memory_working_set_bytes{origin_prometheus=~"",container!="",node=~"^.*$"})
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_MEMORY_WORKING_SET_BYTES);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_FREE_MEMORY);
         QueryRangeMetricsResult usageMemoryQueryResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterMemoryInfo> clusterMemoryInfos = new ArrayList<>();
         if (ObjectUtil.isAllNotEmpty(allMemoryQueryResult, usageMemoryQueryResult)) {
@@ -171,7 +177,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 clusterMemoryInfos.add(ClusterMemoryInfo.builder()
                         .allMemorySize(allMemorySize / 1024 / 1024 / 1024)
                         .usageMemorySize(usageMemorySize / 1024 / 1024 / 1024)
-                        .nodeName(allMemoryResult.get(i).getMetric().getOrDefault(NODE, metricsQueryRange.getNodeName()))
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
                         .build());
             }
         }
@@ -183,20 +190,19 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterMemoryDetail> queryMemoryUsageDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // 集群节点内存使用率：sum(container_memory_working_set_bytes{origin_prometheus=~"",container!="",node=~"^.*$"})by (node) / sum(kube_node_status_allocatable{origin_prometheus=~"",resource="memory", unit="byte", node=~"^.*$"})by (node)*100
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_MEMORY_WORKING_SET_BYTES_DETAIL);
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterMemoryDetail> clusterMemoryDetails = new ArrayList<>();
         if (null != metricsResult) {
             metricsResult.getData().getResult().forEach(o -> {
                 Map<String, String> metric = o.getMetric();
-                if (null != metric && metric.containsKey(NODE)) {
-                    String nodeName = metric.get(NODE);
+                if (null != metric) {
                     List<List<Double>> values = o.getValues();
                     ClusterMemoryDetail clusterMemoryDetail = new ClusterMemoryDetail();
-                    clusterMemoryDetail.setNodeName(nodeName);
+                    clusterMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
+                    clusterMemoryDetail.setInstance(metricsQueryRange.getInstance());
                     Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1)));
+                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
                     clusterMemoryDetail.setCapMemroyDetailMap(capCoreDetailMap);
                     clusterMemoryDetails.add(clusterMemoryDetail);
                 }
@@ -209,11 +215,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterDiskInfo> queryDiskUsage(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // 磁盘总量：sum(container_fs_limit_bytes{origin_prometheus=~"",device=~"^/dev/.*$",id="/",node=~"^.*$"})
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_LIMIT_BYTES);
         QueryRangeMetricsResult diskStorageQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
-        // 磁盘使用量：sum(container_fs_usage_bytes{origin_prometheus=~"",device=~"^/dev/.*$",id="/",node=~"^.*$"})
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_USAGE_BYTES);
         QueryRangeMetricsResult usageDiskStorageQueryResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterDiskInfo> clusterDiskInfos = new ArrayList<>();
@@ -226,7 +230,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 clusterDiskInfos.add(ClusterDiskInfo.builder()
                         .allDiskSize(allDiskStorageSize / 1024 / 1024 / 1024)
                         .usageDiskSize(usageDiskStorageSize / 1024 / 1024 / 1024)
-                        .nodeName(allDiskStorageResult.get(i).getMetric().getOrDefault(NODE, metricsQueryRange.getNodeName()))
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
                         .build());
             }
         }
@@ -238,20 +243,19 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterDiskMemoryDetail> queryDiskUsageDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // 磁盘使用率：sum(container_fs_usage_bytes{origin_prometheus=~"",device=~"^/dev/.*$",id="/",node=~"^.*$"})by (node) / sum (container_fs_limit_bytes{origin_prometheus=~"",device=~"^/dev/.*$",id="/",node=~"^.*$"})by (node)
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_USAGE_BYTES_DETAIL);
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterDiskMemoryDetail> clusterDiskMemoryDetails = new ArrayList<>();
         if (null != metricsResult) {
             metricsResult.getData().getResult().forEach(o -> {
                 Map<String, String> metric = o.getMetric();
-                if (null != metric && metric.containsKey(NODE)) {
-                    String nodeName = metric.get(NODE);
+                if (null != metric) {
                     List<List<Double>> values = o.getValues();
                     ClusterDiskMemoryDetail clusterDiskMemoryDetail = new ClusterDiskMemoryDetail();
-                    clusterDiskMemoryDetail.setNodeName(nodeName);
+                    clusterDiskMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
+                    clusterDiskMemoryDetail.setInstance(metricsQueryRange.getInstance());
                     Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1)));
+                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
                     clusterDiskMemoryDetail.setDiskDetailMap(capCoreDetailMap);
                     clusterDiskMemoryDetails.add(clusterDiskMemoryDetail);
                 }
@@ -264,11 +268,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterCpuCoreInfo> queryCpuCore(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // cpu总核数：sum(kube_node_status_allocatable{origin_prometheus=~"",resource="cpu", unit="core", node=~"^.*$"})
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_KUBE_NODE_STATUS_ALLOCATABLE_CPU);
         QueryRangeMetricsResult allCpuCoreQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
-        // cpu核心数使用量：sum(irate(container_cpu_usage_seconds_total{origin_prometheus=~"",id="/",node=~"^.*$"}[2m]))
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL);
         QueryRangeMetricsResult usageCpuCoreQueryResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterCpuCoreInfo> clusterCpuCoreInfos = new ArrayList<>();
@@ -281,7 +283,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 clusterCpuCoreInfos.add(ClusterCpuCoreInfo.builder()
                         .cpuCoreSize((int) allCpuCoreSize)
                         .usageCpuCore(usageCpuCoreSize)
-                        .nodeName(allCpuCoreResult.get(i).getMetric().getOrDefault(NODE, metricsQueryRange.getNodeName()))
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
                         .build());
             }
         }
@@ -305,7 +308,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 ClusterCpuCoreDetail clusterCpuCoreDetail = new ClusterCpuCoreDetail();
                 clusterCpuCoreDetail.setNodeName(nodeName);
                 Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1)));
+                values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
                 clusterCpuCoreDetail.setCpuCoreDetailMap(capCoreDetailMap);
             });
         }
@@ -317,12 +320,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<ClusterDiskIoDetail> queryDiskIoDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         List<ClusterDiskIoDetail> clusterDiskIoDetailList = new ArrayList<>();
-        // 接收：sum(irate(container_fs_reads_bytes_total{origin_prometheus=~"",node=~"^.*$",namespace=~".*"}[2m]))*8
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_FS_READS_BYTES_TOTAL);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_DISK_READ_TOTAL_BYTES);
         QueryRangeMetricsResult acceptQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
-        // 发送：sum(irate(container_fs_write_bytes_total{origin_prometheus=~"",node=~"^.*$",namespace=~".*"}[2m]))*8
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_FS_WRITE_BYTES_TOTAL);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_DISK_WRITE_TOTAL_BYTES);
         QueryRangeMetricsResult sendQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
         if (ObjectUtil.isAllNotEmpty(acceptQueryResult, sendQueryResult)) {
@@ -331,8 +332,6 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = acceptResult.size(); i < n; i++) {
                 QueryRangeMetricsResult.DataDTO.ResultDTO acceptResultDTO = acceptResult.get(i);
                 QueryRangeMetricsResult.DataDTO.ResultDTO sendResultDTO = sendResult.get(i);
-                Map<String, String> metric = acceptResultDTO.getMetric();
-                String nodeName = metric.getOrDefault(NODE, metricsQueryRange.getNodeName());
                 Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
                 Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
 
@@ -341,7 +340,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
 
                 clusterDiskIoDetailList.add(ClusterDiskIoDetail.builder()
-                        .nodeName(nodeName)
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
                         .receiveBytes(acceptBytes)
                         .sendBytes(sendBytes)
                         .build());
@@ -355,12 +355,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<ClusterNetworkDetail> queryNetworkInfoDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         List<ClusterNetworkDetail> clusterNetworkDetails = new ArrayList<>();
-        // 接收：sum(irate(container_network_receive_bytes_total{origin_prometheus=~"",node=~"^.*$",namespace=~".*"}[2m]))*8
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_NETWORK_RECEIVE_BYTES_TOTAL_RECEIVE);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NETWORK_RECEIVE_BYTES_TOTAL);
         QueryRangeMetricsResult acceptQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
-        // 发送：sum(irate(container_network_transmit_bytes_total{origin_prometheus=~"",node=~"^.*$",namespace=~".*"}[2m]))*8
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_NETWORK_TRANSMIT_BYTES_TOTAL_SEND);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NETWORK_TRANSMIT_BYTES_TOTAL);
         QueryRangeMetricsResult sendQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
         if (ObjectUtil.isAllNotEmpty(acceptQueryResult, sendQueryResult)) {
@@ -369,17 +367,15 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = acceptResult.size(); i < n; i++) {
                 QueryRangeMetricsResult.DataDTO.ResultDTO acceptResultDTO = acceptResult.get(i);
                 QueryRangeMetricsResult.DataDTO.ResultDTO sendResultDTO = sendResult.get(i);
-                Map<String, String> metric = acceptResultDTO.getMetric();
-                String nodeName = metric.getOrDefault(NODE, metricsQueryRange.getNodeName());
                 Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
                 Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
 
-                // 暂定 MB 为单位
                 acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
                 sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
 
                 clusterNetworkDetails.add(ClusterNetworkDetail.builder()
-                        .nodeName(nodeName)
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
                         .receiveBytes(acceptBytes)
                         .sendBytes(sendBytes)
                         .build());
@@ -387,6 +383,69 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         }
         log.info("查询集群节点网络使用情况耗时：{} ms", System.currentTimeMillis() - start);
         return clusterNetworkDetails;
+    }
+
+    @Override
+    public List<GpuMemoryInfo> queryGpuMemoryInfo(String nodeName) {
+        MetricsQuery metricsQuery = new MetricsQuery();
+        metricsQuery.setDateTime(getCurDateTime());
+        String usedMemoryMetrics = PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY;
+        String freeMemoryMetrics = PrometheusMetricsConstant.DCGM_GPU_FREE_MEMORY;
+        if (StringUtils.equals(nodeName, ALL_TAG)) {
+            usedMemoryMetrics = usedMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
+            freeMemoryMetrics = freeMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
+        } else {
+            usedMemoryMetrics = usedMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
+            freeMemoryMetrics = freeMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
+        }
+
+        metricsQuery.setMetricsTag(usedMemoryMetrics);
+        QueryMetricsResult usedMemory = queryFromPrometheus(metricsQuery);
+
+        metricsQuery.setMetricsTag(freeMemoryMetrics);
+        QueryMetricsResult freeMemory = queryFromPrometheus(metricsQuery);
+
+        List<GpuMemoryInfo> clusterNodeInfoList = new ArrayList<>();
+
+        if (ObjectUtil.isAllNotEmpty(usedMemory, freeMemory)) {
+            List<QueryMetricsResult.DataDTO.ResultDTO> usedMemoryResult = usedMemory.getData().getResult();
+            List<QueryMetricsResult.DataDTO.ResultDTO> freeMemoryResult = freeMemory.getData().getResult();
+            for (int i = 0; i < usedMemoryResult.size(); i++) {
+                clusterNodeInfoList.add(GpuMemoryInfo.builder()
+                        .nodeName(nodeName)
+                        .usedMemory(usedMemoryResult.get(i).getValue().get(1))
+                        .freeMemory(freeMemoryResult.get(i).getValue().get(1))
+                        .totalMemory(freeMemoryResult.get(i).getValue().get(1) + usedMemoryResult.get(i).getValue().get(1))
+                        .build()
+                );
+            }
+        }
+        return clusterNodeInfoList;
+    }
+
+    @Override
+    public List<GpuMemoryDetail> queryGpuMemoryDetails(MetricsQueryRange metricsQueryRange) {
+        long start = System.currentTimeMillis();
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_UTIL_RATIO);
+        QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
+        List<GpuMemoryDetail> gpuMemoryDetails = new ArrayList<>();
+        if (null != metricsResult) {
+            metricsResult.getData().getResult().forEach(o -> {
+                Map<String, String> metric = o.getMetric();
+                if (null != metric) {
+                    String nodeName = metricsQueryRange.getNodeName();
+                    List<List<Double>> values = o.getValues();
+                    GpuMemoryDetail gpuMemoryDetail = new GpuMemoryDetail();
+                    gpuMemoryDetail.setNodeName(nodeName);
+                    Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
+                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1)));
+                    gpuMemoryDetail.setMemoryUsageMap(capCoreDetailMap);
+                    gpuMemoryDetails.add(gpuMemoryDetail);
+                }
+            });
+        }
+        log.info("统计集群GPU内存使用率情况耗时：{} ms", System.currentTimeMillis() - start);
+        return gpuMemoryDetails;
     }
 
     private String getCurDateTime() {

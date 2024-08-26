@@ -32,6 +32,11 @@ public class TestController {
         return resourceMonitorService.queryGpuInfo(nodeName);
     }
 
+    @GetMapping(value = "/gpuMemoryInfo/{nodeName}")
+    public List<GpuMemoryInfo> gpuMemoryInfo(@PathVariable(value = "nodeName") String nodeName) {
+        return resourceMonitorService.queryGpuMemoryInfo(nodeName);
+    }
+
     @GetMapping(value = "/nodeStatus/{nodeName}/{start}/{end}")
     public List<ClusterNodeStatus> clusterNodeStatus(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
         MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
@@ -104,8 +109,17 @@ public class TestController {
         return resourceMonitorService.queryNetworkInfoDetails(metricsQueryRange);
     }
 
+    @GetMapping(value = "/gpuMemoryDetails/{nodeName}/{start}/{end}")
+    public List<GpuMemoryDetail> gpuMemoryDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
+        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
+        metricsQueryRange.setNodeName(nodeName);
+        extracted(metricsQueryRange);
+        return resourceMonitorService.queryGpuMemoryDetails(metricsQueryRange);
+    }
+
     private static void extracted(MetricsQueryRange metricsQueryRange) {
         metricsQueryRange.setStep(10f);
+        metricsQueryRange.setInstance("all");
         long timeMillis = System.currentTimeMillis();
         double timeStampWithDecimal = timeMillis / 1000.0;
         DecimalFormat decimalFormat = new DecimalFormat("#.###");

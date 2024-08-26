@@ -22,4 +22,6 @@ public class ClusterDiskInfo {
     private Double usageDiskSize;
 
     private String nodeName;
+
+    private String instance;
 }

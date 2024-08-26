@@ -99,4 +99,20 @@ public interface ResourceMonitorService {
      */
     List<ClusterNetworkDetail> queryNetworkInfoDetails(MetricsQueryRange metricsQueryRange);
 
+    /**
+     * 查询集群gpu内存使用情况
+     *
+     * @param nodeName 节点名称
+     * @return gpu内存使用情况
+     */
+    List<GpuMemoryInfo> queryGpuMemoryInfo(String nodeName);
+
+    /**
+     * 查询集群gpu内存使用情况详情
+     *
+     * @param metricsQueryRange 查询条件
+     * @return 集群gpu内存使用情况详情
+     */
+    List<GpuMemoryDetail> queryGpuMemoryDetails(MetricsQueryRange metricsQueryRange);
+
 }

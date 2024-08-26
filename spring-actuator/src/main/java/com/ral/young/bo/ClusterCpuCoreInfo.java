@@ -22,4 +22,6 @@ public class ClusterCpuCoreInfo {
     private Double usageCpuCore;
 
     private String nodeName;
+
+    private String instance;
 }

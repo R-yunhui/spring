@@ -21,6 +21,8 @@ public class ClusterMemoryDetail {
 
     private String nodeName;
 
+    private String instance;
+
     /**
      * 集群内存使用详情 key：时间戳  value：内存使用率
      */

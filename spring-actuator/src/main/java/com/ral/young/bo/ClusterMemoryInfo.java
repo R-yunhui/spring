@@ -22,4 +22,6 @@ public class ClusterMemoryInfo {
     private Double usageMemorySize;
 
     private String nodeName;
+
+    private String instance;
 }

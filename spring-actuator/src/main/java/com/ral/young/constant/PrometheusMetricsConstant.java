@@ -12,6 +12,8 @@ public class PrometheusMetricsConstant {
 
     public static final String NODE_NAME_REPLACE_TAG = "$nodeName$";
 
+    public static final String INSTANCE_NAME_REPLACE_TAG = "$instance$";
+
     /**
      * 所有节点数
      */
@@ -25,27 +27,27 @@ public class PrometheusMetricsConstant {
     /**
      * 集群总内存
      */
-    public static final String SUM_KUBE_NODE_STATUS_ALLOCATABLE_MEMORY = "sum(kube_node_status_allocatable{origin_prometheus=~\"\",resource=\"memory\", unit=\"byte\", node=~\"$nodeName$\"})";
+    public static final String SUM_NODE_TOTAL_MEMORY = "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 集群已使用内存
      */
-    public static final String SUM_CONTAINER_MEMORY_WORKING_SET_BYTES = "sum(container_memory_working_set_bytes{origin_prometheus=~\"\",container!=\"\",node=~\"$nodeName$\"})";
+    public static final String SUM_NODE_FREE_MEMORY = "sum(node_memory_MemFree_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 磁盘总量
      */
-    public static final String SUM_CONTAINER_FS_LIMIT_BYTES = "sum(container_fs_limit_bytes{origin_prometheus=~\"\",device=~\"^/dev/.*$\",id=\"/\",node=~\"$nodeName$\"})";
+    public static final String SUM_CONTAINER_FS_LIMIT_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
 
     /**
      * 磁盘使用量
      */
-    public static final String SUM_CONTAINER_FS_USAGE_BYTES = "sum(container_fs_usage_bytes{origin_prometheus=~\"\",device=~\"^/dev/.*$\",id=\"/\",node=~\"$nodeName$\"})";
+    public static final String SUM_CONTAINER_FS_USAGE_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
 
     /**
      * cpu总核数
      */
-    public static final String SUM_KUBE_NODE_STATUS_ALLOCATABLE_CPU = "sum(kube_node_status_allocatable{origin_prometheus=~\"\",resource=\"cpu\", unit=\"core\", node=~\"$nodeName$\"})";
+    public static final String SUM_KUBE_NODE_STATUS_ALLOCATABLE_CPU = "count(node_cpu_seconds_total{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",mode='system',instance=~\"$instance$\"}) by (instance)";
 
     /**
      * cpu核心数使用量
@@ -55,12 +57,12 @@ public class PrometheusMetricsConstant {
     /**
      * 集群节点内存使用率
      */
-    public static final String SUM_CONTAINER_MEMORY_WORKING_SET_BYTES_DETAIL = "sum(container_memory_working_set_bytes{origin_prometheus=~\"\",container!=\"\",node=~\"$nodeName$\"})by (node) / sum(kube_node_status_allocatable{origin_prometheus=~\"\",resource=\"memory\", unit=\"byte\", node=~\"$nodeName$\"})by (node)*100";
+    public static final String SUM_CONTAINER_MEMORY_WORKING_SET_BYTES_DETAIL = "(sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"} - node_memory_MemAvailable_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance) / sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance))*100";
 
     /**
      * 磁盘使用率
      */
-    public static final String SUM_CONTAINER_FS_USAGE_BYTES_DETAIL = "sum(container_fs_usage_bytes{origin_prometheus=~\"\",device=~\"^/dev/.*$\",id=\"/\",node=~\"$nodeName$\"})by (node) / sum (container_fs_limit_bytes{origin_prometheus=~\"\",device=~\"^/dev/.*$\",id=\"/\",node=~\"$nodeName$\"})by (node)";
+    public static final String SUM_CONTAINER_FS_USAGE_BYTES_DETAIL = "(sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)) / sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
 
     /**
      * 集群节点 CPU 使用率
@@ -70,23 +72,23 @@ public class PrometheusMetricsConstant {
     /**
      * 网络接收
      */
-    public static final String SUM_IRATE_CONTAINER_NETWORK_RECEIVE_BYTES_TOTAL_RECEIVE = "sum(irate(container_network_receive_bytes_total{origin_prometheus=~\"\",node=~\"$nodeName$\",namespace=~\".*\"}[2m]))*8";
+    public static final String SUM_NETWORK_RECEIVE_BYTES_TOTAL = "sum(node_network_receive_bytes_total{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 网络发送
      */
-    public static final String SUM_IRATE_CONTAINER_NETWORK_TRANSMIT_BYTES_TOTAL_SEND = "sum(irate(container_network_transmit_bytes_total{origin_prometheus=~\"\",node=~\"$nodeName$\",namespace=~\".*\"}[2m]))*8";
+    public static final String SUM_NETWORK_TRANSMIT_BYTES_TOTAL = "sum(node_network_receive_bytes_total{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 磁盘接收
      */
-    public static final String SUM_IRATE_CONTAINER_FS_READS_BYTES_TOTAL = "sum(irate(container_fs_reads_bytes_total{origin_prometheus=~\"\",node=~\"$nodeName$\",namespace=~\".*\"}[2m]))*8";
+    public static final String SUM_NODE_DISK_READ_TOTAL_BYTES = "sum(node_network_transmit_bytes_total{origin_prometheus=~\"\",instance=~\"$instance$\"}) by (instance)";
 
 
     /**
      * 磁盘发送
      */
-    public static final String SUM_IRATE_CONTAINER_FS_WRITE_BYTES_TOTAL = "sum(irate(container_fs_write_bytes_total{origin_prometheus=~\"\",node=~\"$nodeName$\",namespace=~\".*\"}[2m]))*8";
+    public static final String SUM_NODE_DISK_WRITE_TOTAL_BYTES = "sum(node_disk_written_bytes_total{origin_prometheus=~\"\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 节点资源信息
@@ -101,15 +103,15 @@ public class PrometheusMetricsConstant {
     /**
      * gpu 使用率
      */
-    public static final String DCGM_GPU_USED_UTIL_RATIO = "sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname) / (sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname) + sum(DCGM_FI_DEV_FB_FREE{Hostname=\"$nodeName$\"}) by (Hostname))";
+    public static final String DCGM_GPU_USED_UTIL_RATIO = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname) /  sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"} + DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname) ";
 
     /**
-     * gpu 内存使用量
+     * gpu 内存使用量 显存
      */
-    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=\"$nodeName$\"}) by (Hostname)";
+    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname)";
 
     /**
-     * gpu 空闲内存
+     * gpu 空闲内存 显存
      */
-    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=\"$nodeName$\"}) by (Hostname)";
+    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname)";
 }
