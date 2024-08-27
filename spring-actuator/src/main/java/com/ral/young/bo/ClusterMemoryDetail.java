@@ -26,5 +26,5 @@ public class ClusterMemoryDetail {
     /**
      * 集群内存使用详情 key：时间戳  value：内存使用率
      */
-    private Map<Long, Double> capMemroyDetailMap;
+    private Map<Long, String> capMemroyDetailMap;
 }

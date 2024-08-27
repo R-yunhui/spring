@@ -24,5 +24,5 @@ public class ClusterCpuCoreDetail {
     /**
      * cpu核心使用情况 key：时间戳 value：cpu核心使用率
      */
-    private Map<Long, Double> cpuCoreDetailMap;
+    private Map<Long, String> cpuCoreDetailMap;
 }

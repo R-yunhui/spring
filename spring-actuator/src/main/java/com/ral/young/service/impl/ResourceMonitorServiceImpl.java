@@ -16,6 +16,8 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,7 +167,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = allMemoryResult.size(); i < n; i++) {
                 double allMemorySize = allMemoryResult.get(i).getValue().get(1);
                 double usageMemorySize = usageMemoryResult.get(i).getValue().get(1);
-                clusterMemoryInfos.add(ClusterMemoryInfo.builder().allMemorySize(allMemorySize / 1024 / 1024 / 1024).usageMemorySize(usageMemorySize / 1024 / 1024 / 1024).nodeName(nodeName).instance(instance).build());
+                // 单位暂定为 GB
+                clusterMemoryInfos.add(ClusterMemoryInfo.builder().allMemorySize(formatDouble(allMemorySize / 1024 / 1024 / 1024))
+                        .usageMemorySize(formatDouble(usageMemorySize / 1024 / 1024 / 1024))
+                        .nodeName(nodeName)
+                        .instance(instance).build());
             }
         }
 
@@ -176,7 +182,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterMemoryDetail> queryMemoryUsageDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_MEMORY_WORKING_SET_BYTES_DETAIL);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_MEMORY_USED_RATE);
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterMemoryDetail> clusterMemoryDetails = new ArrayList<>();
         if (null != metricsResult) {
@@ -187,9 +193,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                     ClusterMemoryDetail clusterMemoryDetail = new ClusterMemoryDetail();
                     clusterMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
                     clusterMemoryDetail.setInstance(metricsQueryRange.getInstance());
-                    Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
-                    clusterMemoryDetail.setCapMemroyDetailMap(capCoreDetailMap);
+                    Map<Long, String> memoryUsageMap = new HashMap<>(values.size());
+                    values.forEach(value -> memoryUsageMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1)) + "%"));
+                    clusterMemoryDetail.setCapMemroyDetailMap(memoryUsageMap);
                     clusterMemoryDetails.add(clusterMemoryDetail);
                 }
             });
@@ -213,7 +219,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = allDiskStorageResult.size(); i < n; i++) {
                 double allDiskStorageSize = allDiskStorageResult.get(i).getValue().get(1);
                 double usageDiskStorageSize = usageDiskStorageResult.get(i).getValue().get(1);
-                clusterDiskInfos.add(ClusterDiskInfo.builder().allDiskSize(allDiskStorageSize / 1024 / 1024 / 1024).usageDiskSize(usageDiskStorageSize / 1024 / 1024 / 1024).nodeName(nodeName).instance(instance).build());
+                clusterDiskInfos.add(ClusterDiskInfo.builder().allDiskSize(formatDouble(allDiskStorageSize / 1024 / 1024 / 1024))
+                        .usageDiskSize(formatDouble(usageDiskStorageSize / 1024 / 1024 / 1024))
+                        .nodeName(nodeName)
+                        .instance(instance)
+                        .build());
             }
         }
 
@@ -235,8 +245,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                     ClusterDiskMemoryDetail clusterDiskMemoryDetail = new ClusterDiskMemoryDetail();
                     clusterDiskMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
                     clusterDiskMemoryDetail.setInstance(metricsQueryRange.getInstance());
-                    Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
+                    Map<Long, String> capCoreDetailMap = new HashMap<>(values.size());
+                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1) * 100) + "%"));
                     clusterDiskMemoryDetail.setDiskDetailMap(capCoreDetailMap);
                     clusterDiskMemoryDetails.add(clusterDiskMemoryDetail);
                 }
@@ -260,8 +270,13 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             List<QueryMetricsResult.DataDTO.ResultDTO> usageCpuCoreResult = usageCpuCoreQueryResult.getData().getResult();
             for (int i = 0, n = allCpuCoreResult.size(); i < n; i++) {
                 double allCpuCoreSize = allCpuCoreResult.get(i).getValue().get(1);
-                double usageCpuCoreSize = usageCpuCoreResult.get(i).getValue().get(1);
-                clusterCpuCoreInfos.add(ClusterCpuCoreInfo.builder().cpuCoreSize((int) allCpuCoreSize).usageCpuCore(usageCpuCoreSize).nodeName(nodeName).instance(instance).build());
+                double usageCpuCore = usageCpuCoreResult.get(i).getValue().get(1);
+                clusterCpuCoreInfos.add(ClusterCpuCoreInfo.builder()
+                        .cpuCoreSize((int) allCpuCoreSize)
+                        .usageCpuCore(formatDouble(usageCpuCore))
+                        .nodeName(nodeName)
+                        .instance(instance)
+                        .build());
             }
         }
 
@@ -272,7 +287,6 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     @Override
     public List<ClusterCpuCoreDetail> queryCpuCoreDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
-        // 集群节点 CPU 使用率：sum(irate(container_cpu_usage_seconds_total{origin_prometheus=~"",container!="",node=~"^.*$"}[2m]))by (node) / sum(kube_node_status_allocatable{origin_prometheus=~"",resource="cpu", unit="core", node=~"^.*$"})by (node)*100
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL_DETAIL);
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<ClusterCpuCoreDetail> clusterCpuCoreDetails = new ArrayList<>();
@@ -283,9 +297,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 List<List<Double>> values = o.getValues();
                 ClusterCpuCoreDetail clusterCpuCoreDetail = new ClusterCpuCoreDetail();
                 clusterCpuCoreDetail.setNodeName(nodeName);
-                Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1) * 100));
+                Map<Long, String> capCoreDetailMap = new HashMap<>(values.size());
+                values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1)) + "%"));
                 clusterCpuCoreDetail.setCpuCoreDetailMap(capCoreDetailMap);
+                clusterCpuCoreDetails.add(clusterCpuCoreDetail);
             });
         }
         log.info("统计集群CPU使用率情况耗时：{} ms", System.currentTimeMillis() - start);
@@ -311,9 +326,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
                 Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
 
-                // 暂定 MB 为单位
-                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
-                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
+                // 暂定 GB 为单位
+                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
+                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
 
                 clusterDiskIoDetailList.add(ClusterDiskIoDetail.builder().nodeName(metricsQueryRange.getNodeName()).instance(metricsQueryRange.getInstance()).receiveBytes(acceptBytes).sendBytes(sendBytes).build());
             }
@@ -341,8 +356,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
                 Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
 
-                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
-                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), value.get(1) / 1024 / 1024));
+                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
+                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
 
                 clusterNetworkDetails.add(ClusterNetworkDetail.builder().nodeName(metricsQueryRange.getNodeName()).instance(metricsQueryRange.getInstance()).receiveBytes(acceptBytes).sendBytes(sendBytes).build());
             }
@@ -355,20 +370,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<GpuMemoryInfo> queryGpuMemoryInfo(String nodeName) {
         MetricsQuery metricsQuery = new MetricsQuery();
         metricsQuery.setDateTime(getCurDateTime());
-        String usedMemoryMetrics = PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY;
-        String freeMemoryMetrics = PrometheusMetricsConstant.DCGM_GPU_FREE_MEMORY;
-        if (StringUtils.equals(nodeName, ALL_TAG)) {
-            usedMemoryMetrics = usedMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
-            freeMemoryMetrics = freeMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
-        } else {
-            usedMemoryMetrics = usedMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
-            freeMemoryMetrics = freeMemoryMetrics.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
-        }
-
-        metricsQuery.setMetricsTag(usedMemoryMetrics);
+        metricsQuery.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY);
+        metricsQuery.setNodeName(nodeName);
         QueryMetricsResult usedMemory = queryFromPrometheus(metricsQuery);
 
-        metricsQuery.setMetricsTag(freeMemoryMetrics);
+        metricsQuery.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_FREE_MEMORY);
         QueryMetricsResult freeMemory = queryFromPrometheus(metricsQuery);
 
         List<GpuMemoryInfo> clusterNodeInfoList = new ArrayList<>();
@@ -377,7 +383,15 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             List<QueryMetricsResult.DataDTO.ResultDTO> usedMemoryResult = usedMemory.getData().getResult();
             List<QueryMetricsResult.DataDTO.ResultDTO> freeMemoryResult = freeMemory.getData().getResult();
             for (int i = 0; i < usedMemoryResult.size(); i++) {
-                clusterNodeInfoList.add(GpuMemoryInfo.builder().nodeName(nodeName).usedMemory(usedMemoryResult.get(i).getValue().get(1)).freeMemory(freeMemoryResult.get(i).getValue().get(1)).totalMemory(freeMemoryResult.get(i).getValue().get(1) + usedMemoryResult.get(i).getValue().get(1)).build());
+                // 单位 GB
+                double free = freeMemoryResult.get(i).getValue().get(1) / 1024;
+                double used = usedMemoryResult.get(i).getValue().get(1) / 1024;
+                clusterNodeInfoList.add(GpuMemoryInfo.builder()
+                        .nodeName(nodeName)
+                        .usedMemory(formatDouble(used))
+                        .freeMemory(formatDouble(free))
+                        .totalMemory(formatDouble(free + used))
+                        .build());
             }
         }
         return clusterNodeInfoList;
@@ -397,8 +411,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                     List<List<Double>> values = o.getValues();
                     GpuMemoryDetail gpuMemoryDetail = new GpuMemoryDetail();
                     gpuMemoryDetail.setNodeName(nodeName);
-                    Map<Long, Double> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), value.get(1)));
+                    Map<Long, String> capCoreDetailMap = new HashMap<>(values.size());
+                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1) * 100) + "%"));
                     gpuMemoryDetail.setMemoryUsageMap(capCoreDetailMap);
                     gpuMemoryDetails.add(gpuMemoryDetail);
                 }
@@ -414,4 +428,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         DecimalFormat decimalFormat = new DecimalFormat("#.###");
         return decimalFormat.format(timeStampWithDecimal);
     }
+
+    public static double formatDouble(double num) {
+        BigDecimal bd = BigDecimal.valueOf(num);
+        BigDecimal result = bd.setScale(2, RoundingMode.HALF_UP);
+        return result.doubleValue();
+    }
+
 }

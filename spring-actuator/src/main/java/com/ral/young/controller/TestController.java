@@ -32,8 +32,8 @@ public class TestController {
         return resourceMonitorService.queryGpuInfo(nodeName);
     }
 
-    @GetMapping(value = "/nodeStatus/{nodeName}/{start}/{end}")
-    public List<ClusterNodeStatus> clusterNodeStatus(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
+    @GetMapping(value = "/nodeStatus")
+    public List<ClusterNodeStatus> clusterNodeStatus() {
         return resourceMonitorService.queryClusterNodeStatus();
     }
 
@@ -42,10 +42,11 @@ public class TestController {
         return resourceMonitorService.queryCpuCore(nodeName, instance);
     }
 
-    @GetMapping(value = "/cpuCoreDetails/{nodeName}/{start}/{end}")
-    public List<ClusterCpuCoreDetail> cpuCoreDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
+    @GetMapping(value = "/cpuCoreDetails/{nodeName}/{instance}/{start}/{end}")
+    public List<ClusterCpuCoreDetail> cpuCoreDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
         MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
         metricsQueryRange.setNodeName(nodeName);
+        metricsQueryRange.setInstance(instance);
         extracted(metricsQueryRange);
         return resourceMonitorService.queryCpuCoreDetails(metricsQueryRange);
     }

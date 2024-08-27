@@ -21,5 +21,5 @@ public class GpuMemoryDetail {
 
     private String nodeName;
 
-    private Map<Long, Double> memoryUsageMap;
+    private Map<Long, String> memoryUsageMap;
 }
