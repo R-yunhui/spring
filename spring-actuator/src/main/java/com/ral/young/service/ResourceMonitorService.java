@@ -30,18 +30,18 @@ public interface ResourceMonitorService {
     /**
      * 查询集群节点状态
      *
-     * @param metricsQueryRange 查询条件
      * @return 集群节点状态
      */
-    List<ClusterNodeStatus> queryClusterNodeStatus(MetricsQueryRange metricsQueryRange);
+    List<ClusterNodeStatus> queryClusterNodeStatus();
 
     /**
      * 查询集群内存使用情况
      *
-     * @param metricsQueryRange 查询条件
+     * @param nodeName 节点名称
+     * @param instance 实例名称
      * @return 集群内存使用情况
      */
-    List<ClusterMemoryInfo> queryMemoryUsage(MetricsQueryRange metricsQueryRange);
+    List<ClusterMemoryInfo> queryMemoryUsage(String nodeName, String instance);
 
     /**
      * 查询集群内存使用情况详情
@@ -54,10 +54,11 @@ public interface ResourceMonitorService {
     /**
      * 查询集群磁盘使用情况
      *
-     * @param metricsQueryRange 查询条件
+     * @param nodeName 节点名称
+     * @param instance 实例名称
      * @return 集群磁盘使用情况
      */
-    List<ClusterDiskInfo> queryDiskUsage(MetricsQueryRange metricsQueryRange);
+    List<ClusterDiskInfo> queryDiskUsage(String nodeName, String instance);
 
     /**
      * 查询集群磁盘使用情况详情
@@ -70,10 +71,11 @@ public interface ResourceMonitorService {
     /**
      * 查询集群 CPU 核心使用情况
      *
-     * @param metricsQueryRange 查询条件
+     * @param nodeName 节点名称
+     * @param instance 实例名称
      * @return 集群 CPU 核心使用情况
      */
-    List<ClusterCpuCoreInfo> queryCpuCore(MetricsQueryRange metricsQueryRange);
+    List<ClusterCpuCoreInfo> queryCpuCore(String nodeName, String instance);
 
     /**
      * 查询集群 CPU 核心使用情况详情

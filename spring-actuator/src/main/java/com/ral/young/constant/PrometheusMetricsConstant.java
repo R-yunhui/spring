@@ -32,7 +32,7 @@ public class PrometheusMetricsConstant {
     /**
      * 集群已使用内存
      */
-    public static final String SUM_NODE_FREE_MEMORY = "sum(node_memory_MemFree_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
+    public static final String SUM_NODE_FREE_MEMORY = "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance) - sum(node_memory_MemFree_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 磁盘总量

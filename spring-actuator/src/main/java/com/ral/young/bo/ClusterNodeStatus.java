@@ -22,6 +22,4 @@ public class ClusterNodeStatus {
     private Integer failNode;
 
     private Integer allNode;
-
-    private String nodeName;
 }

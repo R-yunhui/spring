@@ -1,6 +1,9 @@
 package com.ral.young.bo;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author renyunhui
@@ -9,6 +12,9 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class MetricsQuery {
 
     /**
@@ -17,4 +23,8 @@ public class MetricsQuery {
     private String metricsTag;
 
     private String dateTime;
+
+    private String nodeName;
+
+    private String instance;
 }
