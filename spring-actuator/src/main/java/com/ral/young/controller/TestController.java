@@ -34,19 +34,12 @@ public class TestController {
 
     @GetMapping(value = "/nodeStatus/{nodeName}/{start}/{end}")
     public List<ClusterNodeStatus> clusterNodeStatus(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryClusterNodeStatus(metricsQueryRange);
+        return resourceMonitorService.queryClusterNodeStatus();
     }
 
-    @GetMapping(value = "/cpuCore/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterCpuCoreInfo> cpuCore(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryCpuCore(metricsQueryRange);
+    @GetMapping(value = "/cpuCore/{nodeName}/{instance}")
+    public List<ClusterCpuCoreInfo> cpuCore(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
+        return resourceMonitorService.queryCpuCore(nodeName, instance);
     }
 
     @GetMapping(value = "/cpuCoreDetails/{nodeName}/{start}/{end}")
@@ -57,13 +50,9 @@ public class TestController {
         return resourceMonitorService.queryCpuCoreDetails(metricsQueryRange);
     }
 
-    @GetMapping(value = "/memoryUsage/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterMemoryInfo> memoryUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryMemoryUsage(metricsQueryRange);
+    @GetMapping(value = "/memoryUsage/{nodeName}/{instance}")
+    public List<ClusterMemoryInfo> memoryUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
+        return resourceMonitorService.queryMemoryUsage(nodeName, instance);
     }
 
     @GetMapping(value = "/memoryUsageDetails/{nodeName}/{instance}/{start}/{end}")
@@ -88,13 +77,9 @@ public class TestController {
         return resourceMonitorService.queryGpuMemoryDetails(metricsQueryRange);
     }
 
-    @GetMapping(value = "/diskUsage/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterDiskInfo> diskUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryDiskUsage(metricsQueryRange);
+    @GetMapping(value = "/diskUsage/{nodeName}/{instance}")
+    public List<ClusterDiskInfo> diskUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
+        return resourceMonitorService.queryDiskUsage(nodeName, instance);
     }
 
     @GetMapping(value = "/diskUsageDetails/{nodeName}/{instance}/{start}/{end}")
