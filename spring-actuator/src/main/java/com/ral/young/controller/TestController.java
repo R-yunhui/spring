@@ -33,7 +33,7 @@ public class TestController {
     }
 
     @GetMapping(value = "/nodeStatus")
-    public List<ClusterNodeStatus> clusterNodeStatus() {
+    public ClusterNodeStatus clusterNodeStatus() {
         return resourceMonitorService.queryClusterNodeStatus();
     }
 

@@ -128,7 +128,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     }
 
     @Override
-    public List<ClusterNodeStatus> queryClusterNodeStatus() {
+    public ClusterNodeStatus queryClusterNodeStatus() {
         long start = System.currentTimeMillis();
         MetricsQuery metricsQuery = new MetricsQuery();
         metricsQuery.setMetricsTag(PrometheusMetricsConstant.SUM_KUBE_NODE_INFO);
@@ -138,18 +138,18 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         metricsQuery.setMetricsTag(PrometheusMetricsConstant.SUM_KUBE_NODE_SPEC_UNSCHEDULABLE);
         QueryMetricsResult unschedulableNodeInfoQueryResult = queryFromPrometheus(metricsQuery);
 
-        List<ClusterNodeStatus> clusterNodeStatusList = new ArrayList<>();
+        ClusterNodeStatus clusterNodeStatus = null;
         if (ObjectUtil.isAllNotEmpty(allNodeInfoQueryResult, unschedulableNodeInfoQueryResult)) {
             List<QueryMetricsResult.DataDTO.ResultDTO> nodeResult = allNodeInfoQueryResult.getData().getResult();
             List<QueryMetricsResult.DataDTO.ResultDTO> unschedulableNodeResult = unschedulableNodeInfoQueryResult.getData().getResult();
             for (int i = 0, n = nodeResult.size(); i < n; i++) {
                 double allNodeSize = CollectionUtils.isEmpty(nodeResult.get(i).getValue()) ? 0 : nodeResult.get(i).getValue().get(1);
                 double unschedulableNodeSize = CollectionUtils.isEmpty(unschedulableNodeResult.get(i).getValue()) ? 0 : unschedulableNodeResult.get(i).getValue().get(1);
-                clusterNodeStatusList.add(ClusterNodeStatus.builder().allNode((int) allNodeSize).failNode((int) unschedulableNodeSize).readyNode((int) allNodeSize - (int) unschedulableNodeSize).build());
+                clusterNodeStatus = ClusterNodeStatus.builder().allNode((int) allNodeSize).failNode((int) unschedulableNodeSize).readyNode((int) allNodeSize - (int) unschedulableNodeSize).build();
             }
         }
         log.info("统计集群节点状态耗时：{} ms", System.currentTimeMillis() - start);
-        return clusterNodeStatusList;
+        return clusterNodeStatus;
     }
 
     @Override

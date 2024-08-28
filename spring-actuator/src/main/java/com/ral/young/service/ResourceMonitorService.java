@@ -32,7 +32,7 @@ public interface ResourceMonitorService {
      *
      * @return 集群节点状态
      */
-    List<ClusterNodeStatus> queryClusterNodeStatus();
+    ClusterNodeStatus queryClusterNodeStatus();
 
     /**
      * 查询集群内存使用情况
