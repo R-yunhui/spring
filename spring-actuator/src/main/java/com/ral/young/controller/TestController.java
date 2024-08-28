@@ -1,6 +1,7 @@
 package com.ral.young.controller;
 
 import com.ral.young.bo.*;
+import com.ral.young.enums.TimeEnum;
 import com.ral.young.service.ResourceMonitorService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -122,6 +123,6 @@ public class TestController {
         String startTime = decimalFormat.format(timeStampWithDecimal);
 
         metricsQueryRange.setEnd(endTime);
-        metricsQueryRange.setStart(startTime);
+        metricsQueryRange.setStart(TimeEnum.NEARLY_ONE_HOUR.getNearlyTime());
     }
 }

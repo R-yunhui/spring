@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @author renyunhui
  * @description 统计 gpu 利用率
@@ -21,9 +23,21 @@ public class GpuInfo {
 
     private String instance;
 
-    private String gpuIndex;
+    private List<GpuCardInfo> gpuCardInfos;
 
-    private Double gpuUtilizationRate;
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Data
+    public static class GpuCardInfo {
+        private String gpuIndex;
 
-    private Boolean canSelect;
+        private Double gpuMemorySize;
+
+        private Double gpuMemoryUsed;
+
+        private Double gpuUtilizationRate;
+
+        private Boolean canSelect;
+    }
 }

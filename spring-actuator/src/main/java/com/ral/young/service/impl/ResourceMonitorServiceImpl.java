@@ -19,10 +19,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author renyunhuiCluster node status
@@ -112,16 +109,53 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<GpuInfo> queryGpuInfo(String nodeName) {
         MetricsQuery metricsQuery = new MetricsQuery();
         metricsQuery.setDateTime(getCurDateTime());
-        String metricsTag = StringUtils.equals(nodeName, ALL_TAG) ? PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME) : PrometheusMetricsConstant.DCGM_FI_DEV_GPU_UTIL.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
-        metricsQuery.setMetricsTag(metricsTag);
-        QueryMetricsResult queryMetricsResult = queryFromPrometheus(metricsQuery);
+        metricsQuery.setNodeName("all");
+        metricsQuery.setInstance("all");
+        metricsQuery.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY);
+        QueryMetricsResult usedMemoryResult = queryFromPrometheus(metricsQuery);
+
+        metricsQuery.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_FREE_MEMORY);
+        QueryMetricsResult freeMemoryResult = queryFromPrometheus(metricsQuery);
+
         List<GpuInfo> gpuInfoList = new ArrayList<>();
-        if (ObjectUtil.isNotEmpty(queryMetricsResult)) {
-            List<QueryMetricsResult.DataDTO.ResultDTO> result = queryMetricsResult.getData().getResult();
-            for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : result) {
-                Map<String, String> metric = resultDTO.getMetric();
-                List<Double> value = resultDTO.getValue();
-                gpuInfoList.add(GpuInfo.builder().nodeName(metric.getOrDefault(HOST_NAME_TAG, nodeName)).instance(metric.get(INSTANCE_TAG)).gpuIndex(metric.get(GPU_TAG)).gpuUtilizationRate(value.get(1)).canSelect(value.get(1) > 0).build());
+        if (ObjectUtil.isAllNotEmpty(usedMemoryResult, freeMemoryResult)) {
+            List<QueryMetricsResult.DataDTO.ResultDTO> result = usedMemoryResult.getData().getResult();
+            for (int i = 0, n = result.size(); i < n; i++) {
+                Map<String, String> metric = result.get(i).getMetric();
+                List<Double> usedMemoryValue = usedMemoryResult.getData().getResult().get(i).getValue();
+                List<Double> freeMemoryValue = freeMemoryResult.getData().getResult().get(i).getValue();
+                double gpuMemorySize = formatDouble(freeMemoryValue.get(1) + usedMemoryValue.get(1));
+                double gpuMemoryUsed = formatDouble(usedMemoryValue.get(1));
+                double gpuUtilizationRate = formatDouble(gpuMemoryUsed / gpuMemorySize);
+
+                 nodeName = metric.get(HOST_NAME_TAG);
+                String finalNodeName = nodeName;
+                Optional<GpuInfo> first = gpuInfoList.stream().filter(o -> finalNodeName.equals(o.getNodeName())).findFirst();
+                if (first.isPresent()) {
+                    first.get().getGpuCardInfos().add(
+                            GpuInfo.GpuCardInfo.builder()
+                                    .gpuIndex(metric.get(GPU_TAG))
+                                    .gpuUtilizationRate(gpuUtilizationRate)
+                                    .gpuMemorySize(gpuMemorySize)
+                                    .gpuMemoryUsed(gpuMemoryUsed)
+                                    .canSelect(gpuUtilizationRate > 0).build()
+                    );
+                } else {
+                    List<GpuInfo.GpuCardInfo> gpuCardInfos = new ArrayList<>();
+                    gpuCardInfos.add(GpuInfo.GpuCardInfo.builder()
+                            .gpuIndex(metric.get(GPU_TAG))
+                            .gpuUtilizationRate(gpuUtilizationRate)
+                            .gpuMemorySize(gpuMemorySize)
+                            .gpuMemoryUsed(gpuMemoryUsed)
+                            .canSelect(gpuUtilizationRate > 0).build());
+
+                    gpuInfoList.add(GpuInfo.builder()
+                            .nodeName(metric.get(HOST_NAME_TAG))
+                            .instance(metric.get(INSTANCE_TAG))
+                            .gpuCardInfos(gpuCardInfos)
+                            .build()
+                    );
+                }
             }
         }
         return gpuInfoList;

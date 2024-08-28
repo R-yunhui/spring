@@ -109,10 +109,10 @@ public class PrometheusMetricsConstant {
     /**
      * gpu 内存使用量 显存
      */
-    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname)";
+    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname,gpu)";
 
     /**
      * gpu 空闲内存 显存
      */
-    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname)";
+    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname,gpu)";
 }
