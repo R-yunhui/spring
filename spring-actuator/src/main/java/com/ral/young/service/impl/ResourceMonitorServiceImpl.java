@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -49,6 +50,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private static final String HOST_NAME_TAG = "Hostname";
 
+    private static final String PLUS_TAG = "+";
+
     @Resource
     private RestTemplate restTemplate;
 
@@ -71,6 +74,14 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             metricsTag = metricsTag.replace(PrometheusMetricsConstant.INSTANCE_NAME_REPLACE_TAG, instance.equals(ALL_TAG) ? PrometheusMetricsConstant.ALL_NODE_NAME : instance);
         }
 
+        if (metricsTag.contains(PLUS_TAG)) {
+            try {
+                metricsTag = URLEncoder.encode(metricsTag, "UTF-8");
+            } catch (Exception e) {
+                log.error("处理异常", e);
+            }
+        }
+
         String url = PROMETHEUS_URL + prometheusQueryUrl + metricsTag;
         return new StringBuilder(url);
     }
@@ -83,7 +94,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         urlBuilder.append("&step=").append(metricsQueryRange.getStep());
 
         log.info("queryRangeFromPrometheus 的 url：{}", urlBuilder);
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(urlBuilder.toString()).build();
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(urlBuilder.toString()).build(metricsQueryRange.isSpecific());
         ResponseEntity<QueryRangeMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryRangeMetricsResult.class);
         return entity.getBody();
     }
@@ -435,6 +446,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<GpuMemoryDetail> queryGpuMemoryDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_UTIL_RATIO);
+        metricsQueryRange.setSpecific(true);
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<GpuMemoryDetail> gpuMemoryDetails = new ArrayList<>();
         if (null != metricsResult) {

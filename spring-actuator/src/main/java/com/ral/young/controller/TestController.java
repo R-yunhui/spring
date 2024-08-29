@@ -123,6 +123,7 @@ public class TestController {
         String startTime = decimalFormat.format(timeStampWithDecimal);
 
         metricsQueryRange.setEnd(endTime);
+        metricsQueryRange.setStep(10.0f);
         metricsQueryRange.setStart(TimeEnum.NEARLY_ONE_HOUR.getNearlyTime());
     }
 }

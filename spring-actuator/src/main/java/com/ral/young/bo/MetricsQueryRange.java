@@ -43,4 +43,9 @@ public class MetricsQueryRange {
      * 节点实力的 IP:PORT
      */
     private String instance;
+
+    /**
+     * 是否包含 + 号这种特殊字符
+     */
+    private boolean specific = false;
 }
