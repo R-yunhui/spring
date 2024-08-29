@@ -3,6 +3,7 @@ package com.ral.young.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ral.young.bo.*;
@@ -50,6 +51,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private static final String PLUS_TAG = "+";
 
+    public static final String HOSTNAME_TAG = "Hostname";
+
+    private final Map<String, String> nodeInstanceMap = new HashMap<>(16);
+
+    private final Map<String, String> instanceNodeMap = new HashMap<>(16);
+
     @Resource
     private RestTemplate restTemplate;
 
@@ -79,6 +86,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     public List<NodeResourceVariationInfo> queryNodeResourceVariationInfo(MetricsQueryRange metricsQueryRange) {
         String resourceEnum = metricsQueryRange.getResourceEnum();
         List<NodeResourceVariationInfo> result = new ArrayList<>();
+        if (MapUtil.isEmpty(nodeInstanceMap) || MapUtil.isEmpty(instanceNodeMap)) {
+            queryClusterNodeInfo();
+        }
+
         switch (ResourceEnum.valueOf(resourceEnum)) {
             case CPU:
                 result = queryCpuCoreDetails(metricsQueryRange);
@@ -119,6 +130,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                         .nodeInstance(metric.get(INSTANCE_TAG))
                         .nodeName(metric.get(NODE_NAME_TAG))
                         .build());
+                nodeInstanceMap.put(metric.get(NODE_NAME_TAG), metric.get(INSTANCE_TAG));
+
+                instanceNodeMap.put(metric.get(INSTANCE_TAG), metric.get(NODE_NAME_TAG));
             }
         }
         return clusterNodeInfoList;
@@ -309,27 +323,39 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     private List<NodeResourceVariationInfo> buildNodeResource(MetricsQueryRange metricsQueryRange) {
         QueryRangeMetricsResult metricsResult = queryRangeFromPrometheus(metricsQueryRange);
         List<NodeResourceVariationInfo> result = new ArrayList<>();
-        if (null != metricsResult) {
-            metricsResult.getData().getResult().forEach(o -> {
-                Map<String, String> metric = o.getMetric();
-                if (null != metric) {
-                    List<List<Double>> values = o.getValues();
-                    NodeResourceVariationInfo gpuMemoryDetail = new NodeResourceVariationInfo();
-                    gpuMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
-                    gpuMemoryDetail.setInstance(metricsQueryRange.getInstance());
-                    List<String> timeList = new ArrayList<>();
-                    List<Double> variationInfoList = new ArrayList<>();
-                    values.forEach(value -> {
-                        long timeStamp = (long) (value.get(0) * 1000);
-                        timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
-                        variationInfoList.add(formatDouble(value.get(1) * 100));
-                    });
-                    gpuMemoryDetail.setTimeList(timeList);
-                    gpuMemoryDetail.setVariationInfoList(variationInfoList);
-                    result.add(gpuMemoryDetail);
+        metricsResult.getData().getResult().forEach(o -> {
+            Map<String, String> metric = o.getMetric();
+            if (null != metric) {
+                List<List<Double>> values = o.getValues();
+                NodeResourceVariationInfo resourceVariationInfo = new NodeResourceVariationInfo();
+
+                if (StrUtil.equalsAny(ALL_TAG, metricsQueryRange.getNodeName(), metricsQueryRange.getInstance())) {
+                    String hostName = metric.getOrDefault(HOSTNAME_TAG, StringUtils.EMPTY);
+                    if (StrUtil.isNotBlank(hostName)) {
+                        resourceVariationInfo.setNodeName(hostName);
+                        resourceVariationInfo.setInstance(nodeInstanceMap.get(hostName));
+                    } else {
+                        String instance = metric.getOrDefault(INSTANCE_TAG, StringUtils.EMPTY);
+                        resourceVariationInfo.setNodeName(instanceNodeMap.get(instance));
+                        resourceVariationInfo.setInstance(instance);
+                    }
+                } else {
+                    resourceVariationInfo.setNodeName(metricsQueryRange.getNodeName());
+                    resourceVariationInfo.setInstance(metricsQueryRange.getInstance());
                 }
-            });
-        }
+
+                List<String> timeList = new ArrayList<>();
+                List<Double> variationInfoList = new ArrayList<>();
+                values.forEach(value -> {
+                    long timeStamp = (long) (value.get(0) * 1000);
+                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+                    variationInfoList.add(formatDouble(value.get(1) * 100));
+                });
+                resourceVariationInfo.setTimeList(timeList);
+                resourceVariationInfo.setVariationInfoList(variationInfoList);
+                result.add(resourceVariationInfo);
+            }
+        });
         return result;
     }
 
@@ -366,9 +392,21 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 });
                 sendResultDTO.getValues().forEach(value -> sendBytes.add(formatDouble(value.get(1) / 1024 / 1024 / 1024)));
 
+                String nodeName;
+                String instance;
+                Map<String, String> metric = acceptResult.get(i).getMetric();
+                if (StrUtil.equalsAny(ALL_TAG, metricsQueryRange.getNodeName(), metricsQueryRange.getInstance())) {
+                    instance = metric.getOrDefault(INSTANCE_TAG, StringUtils.EMPTY);
+                    nodeName = instanceNodeMap.get(instance);
+                } else {
+                    nodeName = metricsQueryRange.getNodeName();
+                    instance= metricsQueryRange.getInstance();
+                }
+
+
                 clusterIoDetailList.add(NodeResourceVariationInfo.builder()
-                        .nodeName(metricsQueryRange.getNodeName())
-                        .instance(metricsQueryRange.getInstance())
+                        .nodeName(nodeName)
+                        .instance(instance)
                         .timeList(timeList)
                         .receiveBytes(receiveBytes)
                         .sendBytes(sendBytes)
@@ -380,9 +418,16 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private void buildNodeResourceVariation(MetricsQueryRange metricsQueryRange, List<NodeResourceVariationInfo> clusterMemoryDetails, QueryRangeMetricsResult.DataDTO.ResultDTO resultDTO) {
         List<List<Double>> values = resultDTO.getValues();
-        NodeResourceVariationInfo clusterMemoryDetail = new NodeResourceVariationInfo();
-        clusterMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
-        clusterMemoryDetail.setInstance(metricsQueryRange.getInstance());
+        Map<String, String> metric = resultDTO.getMetric();
+        NodeResourceVariationInfo resourceVariationInfo = new NodeResourceVariationInfo();
+        if (StrUtil.equalsAny(ALL_TAG, metricsQueryRange.getNodeName(), metricsQueryRange.getInstance())) {
+            String instance = metric.getOrDefault(INSTANCE_TAG, StringUtils.EMPTY);
+            resourceVariationInfo.setNodeName(instanceNodeMap.get(instance));
+            resourceVariationInfo.setInstance(instance);
+        } else {
+            resourceVariationInfo.setNodeName(metricsQueryRange.getNodeName());
+            resourceVariationInfo.setInstance(metricsQueryRange.getInstance());
+        }
 
         List<String> timeList = new ArrayList<>();
         List<Double> variationInfoList = new ArrayList<>();
@@ -391,9 +436,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
             variationInfoList.add(formatDouble(value.get(1)));
         });
-        clusterMemoryDetail.setTimeList(timeList);
-        clusterMemoryDetail.setVariationInfoList(variationInfoList);
-        clusterMemoryDetails.add(clusterMemoryDetail);
+        resourceVariationInfo.setTimeList(timeList);
+        resourceVariationInfo.setVariationInfoList(variationInfoList);
+        clusterMemoryDetails.add(resourceVariationInfo);
     }
 
     private QueryMetricsResult queryFromPrometheus(MetricsQuery metricsQuery) {
