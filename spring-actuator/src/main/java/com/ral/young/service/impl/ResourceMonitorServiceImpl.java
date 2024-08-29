@@ -53,52 +53,53 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     @Override
     public List<NodeResourceInfo> queryNodeResourceInfo(String nodeName, String instance, String resourceEnum) {
-        if (resourceEnum.equals(ResourceEnum.CPU.name())) {
-            return queryCpuCore(nodeName, instance);
+        List<NodeResourceInfo> result = new ArrayList<>();
+        switch (ResourceEnum.valueOf(resourceEnum)) {
+            case CPU:
+                result = queryCpuCore(nodeName, instance);
+                break;
+            case DISK:
+                result = queryDiskUsage(nodeName, instance);
+                break;
+            case GPU:
+                result = queryGpuMemoryInfo(nodeName, instance);
+                break;
+            case MEMORY:
+                result = queryMemoryUsage(nodeName, instance);
+                break;
+            default:
+                break;
         }
-
-        if (resourceEnum.equals(ResourceEnum.DISK.name())) {
-            return queryDiskUsage(nodeName, instance);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.GPU.name())) {
-            return queryGpuMemoryInfo(nodeName);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.MEMORY.name())) {
-            return queryMemoryUsage(nodeName, instance);
-        }
-        return Collections.emptyList();
+        return result;
     }
 
     @Override
     public List<NodeResourceVariationInfo> queryNodeResourceVariationInfo(MetricsQueryRange metricsQueryRange) {
         String resourceEnum = metricsQueryRange.getResourceEnum();
-        if (resourceEnum.equals(ResourceEnum.CPU.name())) {
-            return queryCpuCoreDetails(metricsQueryRange);
+        List<NodeResourceVariationInfo> result = new ArrayList<>();
+        switch (ResourceEnum.valueOf(resourceEnum)) {
+            case CPU:
+                result = queryCpuCoreDetails(metricsQueryRange);
+                break;
+            case DISK:
+                result = queryDiskUsageDetails(metricsQueryRange);
+                break;
+            case GPU:
+                result = queryGpuMemoryDetails(metricsQueryRange);
+                break;
+            case MEMORY:
+                result = queryMemoryUsageDetails(metricsQueryRange);
+                break;
+            case DISK_IO:
+                result = queryDiskIoDetails(metricsQueryRange);
+                break;
+            case NETWORK_IO:
+                result = queryNetworkInfoDetails(metricsQueryRange);
+                break;
+            default:
+                break;
         }
-
-        if (resourceEnum.equals(ResourceEnum.DISK.name())) {
-            return queryDiskUsageDetails(metricsQueryRange);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.GPU.name())) {
-            return queryGpuMemoryDetails(metricsQueryRange);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.MEMORY.name())) {
-            return queryMemoryUsageDetails(metricsQueryRange);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.DISK_IO.name())) {
-            return queryDiskIoDetails(metricsQueryRange);
-        }
-
-        if (resourceEnum.equals(ResourceEnum.NETWORK_IO.name())) {
-            return queryNetworkInfoDetails(metricsQueryRange);
-        }
-
-        return Collections.emptyList();
+        return result;
     }
 
     @Override
@@ -112,7 +113,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             List<QueryMetricsResult.DataDTO.ResultDTO> result = queryMetricsResult.getData().getResult();
             for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : result) {
                 Map<String, String> metric = resultDTO.getMetric();
-                clusterNodeInfoList.add(ClusterNodeInfo.builder().nodeInstance(metric.get(INSTANCE_TAG)).nodeName(metric.get(NODE_NAME_TAG)).build());
+                clusterNodeInfoList.add(ClusterNodeInfo.builder()
+                        .nodeInstance(metric.get(INSTANCE_TAG))
+                        .nodeName(metric.get(NODE_NAME_TAG))
+                        .build());
             }
         }
         return clusterNodeInfoList;
@@ -136,7 +140,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = nodeResult.size(); i < n; i++) {
                 double allNodeSize = CollUtil.isEmpty(nodeResult.get(i).getValue()) ? 0 : nodeResult.get(i).getValue().get(1);
                 double unschedulableNodeSize = CollUtil.isEmpty(unschedulableNodeResult.get(i).getValue()) ? 0 : unschedulableNodeResult.get(i).getValue().get(1);
-                clusterNodeStatus = ClusterNodeStatus.builder().allNode((int) allNodeSize).failNode((int) unschedulableNodeSize).readyNode((int) allNodeSize - (int) unschedulableNodeSize).build();
+                clusterNodeStatus = ClusterNodeStatus.builder()
+                        .allNode((int) allNodeSize)
+                        .failNode((int) unschedulableNodeSize)
+                        .readyNode((int) allNodeSize - (int) unschedulableNodeSize)
+                        .build();
             }
         }
         log.info("统计集群节点状态耗时：{} ms", System.currentTimeMillis() - start);
@@ -180,7 +188,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = allCpuCoreResult.size(); i < n; i++) {
                 double allCpuCoreSize = allCpuCoreResult.get(i).getValue().get(1);
                 double usageCpuCore = usageCpuCoreResult.get(i).getValue().get(1);
-                clusterCpuCoreInfos.add(NodeResourceInfo.builder().total(allCpuCoreSize).used(formatDouble(usageCpuCore)).nodeName(nodeName).instance(instance).build());
+                clusterCpuCoreInfos.add(NodeResourceInfo.builder()
+                        .total(allCpuCoreSize)
+                        .used(formatDouble(usageCpuCore))
+                        .nodeName(nodeName)
+                        .instance(instance)
+                        .build());
             }
         }
 
@@ -188,7 +201,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return clusterCpuCoreInfos;
     }
 
-    public List<NodeResourceInfo> queryGpuMemoryInfo(String nodeName) {
+    public List<NodeResourceInfo> queryGpuMemoryInfo(String nodeName, String instance) {
         MetricsQuery metricsQuery = new MetricsQuery();
         metricsQuery.setDateTime(getCurDateTime());
         metricsQuery.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY);
@@ -207,7 +220,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 // 单位 GB
                 double free = freeMemoryResult.get(i).getValue().get(1) / 1024;
                 double used = usedMemoryResult.get(i).getValue().get(1) / 1024;
-                clusterNodeInfoList.add(NodeResourceInfo.builder().nodeName(nodeName).used(formatDouble(used)).total(formatDouble(free + used)).build());
+                clusterNodeInfoList.add(NodeResourceInfo.builder()
+                        .nodeName(nodeName)
+                        .instance(instance)
+                        .used(formatDouble(used))
+                        .total(formatDouble(free + used))
+                        .build());
             }
         }
         return clusterNodeInfoList;
@@ -223,7 +241,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 double allMemorySize = allMemoryResult.get(i).getValue().get(1);
                 double usageMemorySize = usageMemoryResult.get(i).getValue().get(1);
                 // 单位暂定为 GB
-                result.add(NodeResourceInfo.builder().total(formatDouble(allMemorySize / 1024 / 1024 / 1024)).used(formatDouble(usageMemorySize / 1024 / 1024 / 1024)).nodeName(nodeName).instance(instance).build());
+                result.add(NodeResourceInfo.builder()
+                        .total(formatDouble(allMemorySize / 1024 / 1024 / 1024))
+                        .used(formatDouble(usageMemorySize / 1024 / 1024 / 1024))
+                        .nodeName(nodeName)
+                        .instance(instance)
+                        .build());
             }
         }
         return result;
@@ -330,7 +353,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
                 sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
 
-                clusterIoDetailList.add(NodeResourceVariationInfo.builder().nodeName(metricsQueryRange.getNodeName()).instance(metricsQueryRange.getInstance()).receiveBytes(acceptBytes).sendBytes(sendBytes).build());
+                clusterIoDetailList.add(NodeResourceVariationInfo.builder()
+                        .nodeName(metricsQueryRange.getNodeName())
+                        .instance(metricsQueryRange.getInstance())
+                        .receiveBytes(acceptBytes)
+                        .sendBytes(sendBytes)
+                        .build());
             }
         }
         return clusterIoDetailList;
