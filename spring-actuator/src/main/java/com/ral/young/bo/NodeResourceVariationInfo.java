@@ -9,22 +9,23 @@ import java.util.Map;
 
 /**
  * @author renyunhui
- * @description 这是一个ClusteCpuDetail类
- * @date 2024-08-22 10-22-25
- * @since 1.0.0
+ * @description 查询到的节点资源变化情况
+ * @date 2024-08-28 14-54-51
+ * @since 1.1.2
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ClusterDiskMemoryDetail {
+public class NodeResourceVariationInfo {
 
     private String nodeName;
 
     private String instance;
 
-    /**
-     * 磁盘使用情况 key：时间戳 value：磁盘使用率
-     */
-    private Map<Long, String> diskDetailMap;
+    private Map<Long, String> variationInfoMap;
+
+    private Map<Long, Double> receiveBytes;
+
+    private Map<Long, Double> sendBytes;
 }

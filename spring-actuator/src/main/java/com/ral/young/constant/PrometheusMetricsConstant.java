@@ -7,7 +7,7 @@ package com.ral.young.constant;
  * @since 1.2.0
  */
 public class PrometheusMetricsConstant {
-    
+
     public static final String ALL_NODE_NAME = "^.*$";
 
     public static final String NODE_NAME_REPLACE_TAG = "$nodeName$";
@@ -42,17 +42,17 @@ public class PrometheusMetricsConstant {
     /**
      * 磁盘总量
      */
-    public static final String SUM_CONTAINER_FS_LIMIT_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
+    public static final String SUM_CONTAINER_FS_LIMIT_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance)";
 
     /**
      * 磁盘使用量
      */
-    public static final String SUM_CONTAINER_FS_USAGE_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
+    public static final String SUM_CONTAINER_FS_USAGE_BYTES = "sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance)";
 
     /**
      * 磁盘使用率
      */
-    public static final String SUM_CONTAINER_FS_USAGE_BYTES_DETAIL = "(sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)) / sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by(instance)";
+    public static final String SUM_CONTAINER_FS_USAGE_BYTES_DETAIL = "(sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance) - sum(node_filesystem_free_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance)) / sum(node_filesystem_size_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"})by (instance)";
 
     /**
      * cpu核数
@@ -68,7 +68,7 @@ public class PrometheusMetricsConstant {
     /**
      * 集群节点 CPU 使用率
      */
-    public static final String SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL_DETAIL = "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\", instance=~\"$instance$\"}[5m])) * 100)";
+    public static final String SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL_DETAIL = "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\", instance=~\"$instance$\"}[5m])) * 100)";
 
     /**
      * 网络接收
@@ -97,11 +97,6 @@ public class PrometheusMetricsConstant {
     public static final String NODE_UNAME_INFO = "node_uname_info";
 
     /**
-     * 通过 dcgm-exporter 采集的 gpu 利用率
-     */
-    public static final String DCGM_FI_DEV_GPU_UTIL = "DCGM_FI_DEV_GPU_UTIL{Hostname=~\"$nodeName$\"}";
-
-    /**
      * gpu 使用率
      */
     public static final String DCGM_GPU_USED_UTIL_RATIO = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname) / sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"} + DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname)";
@@ -109,10 +104,10 @@ public class PrometheusMetricsConstant {
     /**
      * gpu 内存使用量 显存
      */
-    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname,gpu)";
+    public static final String DCGM_GPU_USED_MEMORY = "sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname)";
 
     /**
      * gpu 空闲内存 显存
      */
-    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname,gpu)";
+    public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname)";
 }

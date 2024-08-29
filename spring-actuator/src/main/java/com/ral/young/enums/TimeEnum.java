@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 
 /**
  * @author renyunhui
- * @description 这是一个TimeEnum类
+ * @description 监控可选的时间范围
  * @date 2024-08-28 10-29-26
  * @since 1.0.0
  */
@@ -141,10 +141,6 @@ public enum TimeEnum {
 
     TimeEnum(String desc) {
         this.desc = desc;
-    }
-
-    public TimeEnum getEnumsByName(String enumName) {
-        return TimeEnum.valueOf(enumName);
     }
 
     public abstract String getNearlyTime();

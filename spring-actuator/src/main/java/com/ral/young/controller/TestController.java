@@ -23,107 +23,46 @@ public class TestController {
     @Resource
     private ResourceMonitorService resourceMonitorService;
 
-    @GetMapping(value = "/clusterNodeInfo")
+    @GetMapping(value = "/api/v1/resource-monitor/clusterNodeInfo")
     public List<ClusterNodeInfo> clusterNodeInfo() {
         return resourceMonitorService.queryClusterNodeInfo();
     }
 
-    @GetMapping(value = "/gpuInfo/{nodeName}")
-    public List<GpuInfo> gpuInfo(@PathVariable(value = "nodeName") String nodeName) {
-        return resourceMonitorService.queryGpuInfo(nodeName);
-    }
-
-    @GetMapping(value = "/nodeStatus")
+    @GetMapping(value = "/api/v1/resource-monitor/nodeStatus")
     public ClusterNodeStatus clusterNodeStatus() {
         return resourceMonitorService.queryClusterNodeStatus();
     }
 
-    @GetMapping(value = "/cpuCore/{nodeName}/{instance}")
-    public List<ClusterCpuCoreInfo> cpuCore(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
-        return resourceMonitorService.queryCpuCore(nodeName, instance);
+    @GetMapping(value = "/api/v1/resource-monitor/nodeResourceInfo/{nodeName}/{instance}/{resource}")
+    public List<NodeResourceInfo> nodeResourceInfo(@PathVariable(value = "nodeName") String nodeName,
+                                                   @PathVariable(value = "instance") String instance,
+                                                   @PathVariable(value = "resource") String resource) {
+        return resourceMonitorService.queryNodeResourceInfo(nodeName, instance, resource);
     }
 
-    @GetMapping(value = "/cpuCoreDetails/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterCpuCoreDetail> cpuCoreDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
+    @GetMapping(value = "/api/v1/resource-monitor/nodeResourceVariationInfo/{nodeName}/{instance}/{timeEnum}/{resource}")
+    public List<NodeResourceVariationInfo> nodeResourceVariationInfo(@PathVariable(value = "nodeName") String nodeName,
+                                                                     @PathVariable(value = "instance") String instance,
+                                                                     @PathVariable(value = "timeEnum") String timeEnum,
+                                                                     @PathVariable(value = "resource") String resource
+    ) {
+        MetricsQueryRange metricsQueryRange = getMetricsQueryRange(nodeName, instance, timeEnum, resource);
+        return resourceMonitorService.queryNodeResourceVariationInfo(metricsQueryRange);
+    }
+
+    private static MetricsQueryRange getMetricsQueryRange(String nodeName, String instance, String timeEnum, String resource) {
         MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
         metricsQueryRange.setNodeName(nodeName);
         metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryCpuCoreDetails(metricsQueryRange);
-    }
+        metricsQueryRange.setResourceEnum(resource);
 
-    @GetMapping(value = "/memoryUsage/{nodeName}/{instance}")
-    public List<ClusterMemoryInfo> memoryUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
-        return resourceMonitorService.queryMemoryUsage(nodeName, instance);
-    }
-
-    @GetMapping(value = "/memoryUsageDetails/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterMemoryDetail> memoryUsageDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryMemoryUsageDetails(metricsQueryRange);
-    }
-
-    @GetMapping(value = "/gpuMemoryInfo/{nodeName}")
-    public List<GpuMemoryInfo> gpuMemoryInfo(@PathVariable(value = "nodeName") String nodeName) {
-        return resourceMonitorService.queryGpuMemoryInfo(nodeName);
-    }
-
-    @GetMapping(value = "/gpuMemoryDetails/{nodeName}/{start}/{end}")
-    public List<GpuMemoryDetail> gpuMemoryDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryGpuMemoryDetails(metricsQueryRange);
-    }
-
-    @GetMapping(value = "/diskUsage/{nodeName}/{instance}")
-    public List<ClusterDiskInfo> diskUsage(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance) {
-        return resourceMonitorService.queryDiskUsage(nodeName, instance);
-    }
-
-    @GetMapping(value = "/diskUsageDetails/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterDiskMemoryDetail> diskUsageDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryDiskUsageDetails(metricsQueryRange);
-    }
-
-    @GetMapping(value = "/diskIoDetails/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterDiskIoDetail> diskIoDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryDiskIoDetails(metricsQueryRange);
-    }
-
-    @GetMapping(value = "/networkInfoDetails/{nodeName}/{instance}/{start}/{end}")
-    public List<ClusterNetworkDetail> networkInfoDetails(@PathVariable(value = "nodeName") String nodeName, @PathVariable(value = "instance") String instance, @PathVariable(value = "start") String start, @PathVariable(value = "end") String end) {
-        MetricsQueryRange metricsQueryRange = new MetricsQueryRange();
-        metricsQueryRange.setNodeName(nodeName);
-        metricsQueryRange.setInstance(instance);
-        extracted(metricsQueryRange);
-        return resourceMonitorService.queryNetworkInfoDetails(metricsQueryRange);
-    }
-
-    private static void extracted(MetricsQueryRange metricsQueryRange) {
-        metricsQueryRange.setStep(10f);
         long timeMillis = System.currentTimeMillis();
-        double timeStampWithDecimal = timeMillis / 1000.0;
         DecimalFormat decimalFormat = new DecimalFormat("#.###");
-        String endTime = decimalFormat.format(timeStampWithDecimal);
+        double timeStampWithDecimal = timeMillis / 1000.0;
+        metricsQueryRange.setEnd(decimalFormat.format(timeStampWithDecimal));
+        metricsQueryRange.setStart(TimeEnum.valueOf(timeEnum).getNearlyTime());
 
-        timeMillis = timeMillis - 1000 * 10 * 60;
-        timeStampWithDecimal = timeMillis / 1000.0;
-        String startTime = decimalFormat.format(timeStampWithDecimal);
-
-        metricsQueryRange.setEnd(endTime);
         metricsQueryRange.setStep(10.0f);
-        metricsQueryRange.setStart(TimeEnum.NEARLY_ONE_HOUR.getNearlyTime());
+        return metricsQueryRange;
     }
 }

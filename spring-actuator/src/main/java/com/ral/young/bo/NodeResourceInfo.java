@@ -5,25 +5,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 /**
  * @author renyunhui
- * @description ClusterNetworkDetail
- * @date 2024-08-21 15-44-20
+ * @description 查询到的节点资源信息
+ * @date 2024-08-28 14-54-51
  * @since 1.0.0
  */
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class ClusterNetworkDetail {
+@Data
+public class NodeResourceInfo {
 
     private String nodeName;
 
     private String instance;
 
-    private Map<Long, Double> receiveBytes;
+    private Double used;
 
-    private Map<Long, Double> sendBytes;
+    private Double total;
 }

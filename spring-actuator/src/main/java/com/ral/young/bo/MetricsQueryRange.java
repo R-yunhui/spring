@@ -48,4 +48,9 @@ public class MetricsQueryRange {
      * 是否包含 + 号这种特殊字符
      */
     private boolean specific = false;
+
+    /**
+     * 资源枚举
+     */
+    private String resourceEnum;
 }
