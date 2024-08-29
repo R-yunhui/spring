@@ -34,7 +34,7 @@ import java.util.*;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private String prometheusUrl = "http://192.168.2.36:39090";
+    private static final String PROMETHEUS_URL = "http://192.168.2.36:39090";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "/api/v1/query_range?query=";
 
@@ -70,7 +70,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 metricsTag = metricsTag.replace("by (instance)", StringUtils.EMPTY);
                 metricsTag = metricsTag.replace("by (Hostname)", StringUtils.EMPTY);
             } else {
-                metricsTag = metricsTag.replace(PrometheusMetricsConstant.ALL_NODE_NAME, nodeName);
+                metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
             }
         }
 
@@ -92,7 +92,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             }
         }
 
-        String url = prometheusUrl + prometheusQueryUrl + metricsTag;
+        String url = PROMETHEUS_URL + prometheusQueryUrl + metricsTag;
         return new StringBuilder(url);
     }
 
@@ -207,8 +207,14 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         QueryMetricsResult allMemoryQueryResult = queryFromPrometheus(metricsQuery);
 
         metricsQuery.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_FREE_MEMORY);
+        List<NodeResourceInfo> result = buildResult(nodeName, instance, metricsQuery, allMemoryQueryResult);
+        log.info("统计集群节点内存使用情况耗时：{} ms", System.currentTimeMillis() - start);
+        return result;
+    }
+
+    private List<NodeResourceInfo> buildResult(String nodeName, String instance, MetricsQuery metricsQuery, QueryMetricsResult allMemoryQueryResult) {
         QueryMetricsResult usageMemoryQueryResult = queryFromPrometheus(metricsQuery);
-        List<NodeResourceInfo> clusterMemoryInfos = new ArrayList<>();
+        List<NodeResourceInfo> result = new ArrayList<>();
         if (ObjectUtil.isAllNotEmpty(allMemoryQueryResult, usageMemoryQueryResult)) {
             List<QueryMetricsResult.DataDTO.ResultDTO> allMemoryResult = allMemoryQueryResult.getData().getResult();
             List<QueryMetricsResult.DataDTO.ResultDTO> usageMemoryResult = usageMemoryQueryResult.getData().getResult();
@@ -216,12 +222,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 double allMemorySize = allMemoryResult.get(i).getValue().get(1);
                 double usageMemorySize = usageMemoryResult.get(i).getValue().get(1);
                 // 单位暂定为 GB
-                clusterMemoryInfos.add(NodeResourceInfo.builder().total(formatDouble(allMemorySize / 1024 / 1024 / 1024)).used(formatDouble(usageMemorySize / 1024 / 1024 / 1024)).nodeName(nodeName).instance(instance).build());
+                result.add(NodeResourceInfo.builder().total(formatDouble(allMemorySize / 1024 / 1024 / 1024)).used(formatDouble(usageMemorySize / 1024 / 1024 / 1024)).nodeName(nodeName).instance(instance).build());
             }
         }
-
-        log.info("统计集群节点内存使用情况耗时：{} ms", System.currentTimeMillis() - start);
-        return clusterMemoryInfos;
+        return result;
     }
 
     public List<NodeResourceVariationInfo> queryMemoryUsageDetails(MetricsQueryRange metricsQueryRange) {
@@ -254,20 +258,10 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         QueryMetricsResult diskStorageQueryResult = queryFromPrometheus(metricsQuery);
 
         metricsQuery.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_USAGE_BYTES);
-        QueryMetricsResult usageDiskStorageQueryResult = queryFromPrometheus(metricsQuery);
-        List<NodeResourceInfo> clusterDiskInfos = new ArrayList<>();
-        if (ObjectUtil.isAllNotEmpty(diskStorageQueryResult, usageDiskStorageQueryResult)) {
-            List<QueryMetricsResult.DataDTO.ResultDTO> allDiskStorageResult = diskStorageQueryResult.getData().getResult();
-            List<QueryMetricsResult.DataDTO.ResultDTO> usageDiskStorageResult = usageDiskStorageQueryResult.getData().getResult();
-            for (int i = 0, n = allDiskStorageResult.size(); i < n; i++) {
-                double allDiskStorageSize = allDiskStorageResult.get(i).getValue().get(1);
-                double usageDiskStorageSize = usageDiskStorageResult.get(i).getValue().get(1);
-                clusterDiskInfos.add(NodeResourceInfo.builder().total(formatDouble(allDiskStorageSize / 1024 / 1024 / 1024)).used(formatDouble(usageDiskStorageSize / 1024 / 1024 / 1024)).nodeName(nodeName).instance(instance).build());
-            }
-        }
+        List<NodeResourceInfo> result = buildResult(nodeName, instance, metricsQuery, diskStorageQueryResult);
 
         log.info("统计集群磁盘使用情况耗时：{} ms", System.currentTimeMillis() - start);
-        return clusterDiskInfos;
+        return result;
     }
 
     public List<NodeResourceVariationInfo> queryDiskUsageDetails(MetricsQueryRange metricsQueryRange) {
@@ -345,6 +339,12 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         QueryRangeMetricsResult acceptQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_DISK_WRITE_TOTAL_BYTES);
+        buildResult(metricsQueryRange, clusterIoDetailList, acceptQueryResult);
+        log.info("查询集群节点磁盘IO情况耗时：{} ms", System.currentTimeMillis() - start);
+        return clusterIoDetailList;
+    }
+
+    private void buildResult(MetricsQueryRange metricsQueryRange, List<NodeResourceVariationInfo> clusterIoDetailList, QueryRangeMetricsResult acceptQueryResult) {
         QueryRangeMetricsResult sendQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
         if (ObjectUtil.isAllNotEmpty(acceptQueryResult, sendQueryResult)) {
@@ -363,8 +363,6 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 clusterIoDetailList.add(NodeResourceVariationInfo.builder().nodeName(metricsQueryRange.getNodeName()).instance(metricsQueryRange.getInstance()).receiveBytes(acceptBytes).sendBytes(sendBytes).build());
             }
         }
-        log.info("查询集群节点磁盘IO情况耗时：{} ms", System.currentTimeMillis() - start);
-        return clusterIoDetailList;
     }
 
     public List<NodeResourceVariationInfo> queryNetworkInfoDetails(MetricsQueryRange metricsQueryRange) {
@@ -374,23 +372,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         QueryRangeMetricsResult acceptQueryResult = queryRangeFromPrometheus(metricsQueryRange);
 
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NETWORK_TRANSMIT_BYTES_TOTAL);
-        QueryRangeMetricsResult sendQueryResult = queryRangeFromPrometheus(metricsQueryRange);
-
-        if (ObjectUtil.isAllNotEmpty(acceptQueryResult, sendQueryResult)) {
-            List<QueryRangeMetricsResult.DataDTO.ResultDTO> acceptResult = acceptQueryResult.getData().getResult();
-            List<QueryRangeMetricsResult.DataDTO.ResultDTO> sendResult = sendQueryResult.getData().getResult();
-            for (int i = 0, n = acceptResult.size(); i < n; i++) {
-                QueryRangeMetricsResult.DataDTO.ResultDTO acceptResultDTO = acceptResult.get(i);
-                QueryRangeMetricsResult.DataDTO.ResultDTO sendResultDTO = sendResult.get(i);
-                Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
-                Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
-
-                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
-                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
-
-                clusterNetworkDetails.add(NodeResourceVariationInfo.builder().nodeName(metricsQueryRange.getNodeName()).instance(metricsQueryRange.getInstance()).receiveBytes(acceptBytes).sendBytes(sendBytes).build());
-            }
-        }
+        buildResult(metricsQueryRange, clusterNetworkDetails, acceptQueryResult);
         log.info("查询集群节点网络使用情况耗时：{} ms", System.currentTimeMillis() - start);
         return clusterNetworkDetails;
     }
