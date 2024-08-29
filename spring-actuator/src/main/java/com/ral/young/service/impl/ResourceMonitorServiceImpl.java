@@ -1,6 +1,8 @@
 package com.ral.young.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ral.young.bo.*;
@@ -34,7 +36,7 @@ import java.util.*;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private static final String PROMETHEUS_URL = "http://192.168.2.36:39090";
+    private static final String PROMETHEUS_URL = "http://192.168.2.20:39090";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "/api/v1/query_range?query=";
 
@@ -315,9 +317,15 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                     NodeResourceVariationInfo gpuMemoryDetail = new NodeResourceVariationInfo();
                     gpuMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
                     gpuMemoryDetail.setInstance(metricsQueryRange.getInstance());
-                    Map<Long, String> capCoreDetailMap = new HashMap<>(values.size());
-                    values.forEach(value -> capCoreDetailMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1) * 100) + "%"));
-                    gpuMemoryDetail.setVariationInfoMap(capCoreDetailMap);
+                    List<String> timeList = new ArrayList<>();
+                    List<Double> variationInfoList = new ArrayList<>();
+                    values.forEach(value -> {
+                        long timeStamp = (long) (value.get(0) * 1000);
+                        timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+                        variationInfoList.add(formatDouble(value.get(1) * 100));
+                    });
+                    gpuMemoryDetail.setTimeList(timeList);
+                    gpuMemoryDetail.setVariationInfoList(variationInfoList);
                     result.add(gpuMemoryDetail);
                 }
             });
@@ -346,17 +354,23 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             for (int i = 0, n = acceptResult.size(); i < n; i++) {
                 QueryRangeMetricsResult.DataDTO.ResultDTO acceptResultDTO = acceptResult.get(i);
                 QueryRangeMetricsResult.DataDTO.ResultDTO sendResultDTO = sendResult.get(i);
-                Map<Long, Double> sendBytes = new HashMap<>(acceptResultDTO.getValues().size());
-                Map<Long, Double> acceptBytes = new HashMap<>(sendResultDTO.getValues().size());
 
+                List<String> timeList = new ArrayList<>();
+                List<Double> receiveBytes = new ArrayList<>();
+                List<Double> sendBytes = new ArrayList<>();
                 // 暂定 GB 为单位
-                acceptResultDTO.getValues().forEach(value -> acceptBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
-                sendResultDTO.getValues().forEach(value -> sendBytes.put((long) (value.get(0) * 1000), formatDouble(value.get(1) / 1024 / 1024 / 1024)));
+                acceptResultDTO.getValues().forEach(value -> {
+                    long timeStamp = (long) (value.get(0) * 1000);
+                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+                    receiveBytes.add(formatDouble(value.get(1) / 1024 / 1024 / 1024));
+                });
+                sendResultDTO.getValues().forEach(value -> sendBytes.add(formatDouble(value.get(1) / 1024 / 1024 / 1024)));
 
                 clusterIoDetailList.add(NodeResourceVariationInfo.builder()
                         .nodeName(metricsQueryRange.getNodeName())
                         .instance(metricsQueryRange.getInstance())
-                        .receiveBytes(acceptBytes)
+                        .timeList(timeList)
+                        .receiveBytes(receiveBytes)
                         .sendBytes(sendBytes)
                         .build());
             }
@@ -369,14 +383,21 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         NodeResourceVariationInfo clusterMemoryDetail = new NodeResourceVariationInfo();
         clusterMemoryDetail.setNodeName(metricsQueryRange.getNodeName());
         clusterMemoryDetail.setInstance(metricsQueryRange.getInstance());
-        Map<Long, String> memoryUsageMap = new HashMap<>(values.size());
-        values.forEach(value -> memoryUsageMap.put((long) (value.get(0) * 1000), formatDouble(value.get(1)) + "%"));
-        clusterMemoryDetail.setVariationInfoMap(memoryUsageMap);
+
+        List<String> timeList = new ArrayList<>();
+        List<Double> variationInfoList = new ArrayList<>();
+        values.forEach(value -> {
+            long timeStamp = (long) (value.get(0) * 1000);
+            timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+            variationInfoList.add(formatDouble(value.get(1)));
+        });
+        clusterMemoryDetail.setTimeList(timeList);
+        clusterMemoryDetail.setVariationInfoList(variationInfoList);
         clusterMemoryDetails.add(clusterMemoryDetail);
     }
 
     private QueryMetricsResult queryFromPrometheus(MetricsQuery metricsQuery) {
-        StringBuilder urlBuilder = replaceMetricsTag(metricsQuery.getMetricsTag(), metricsQuery.getNodeName(), metricsQuery.getInstance(), PROMETHEUS_QUERY_URL);
+        StringBuilder urlBuilder = replaceMetricsTag(metricsQuery.getMetricsTag(), metricsQuery.getNodeName(), metricsQuery.getInstance());
         urlBuilder.append("&time=").append(metricsQuery.getDateTime());
 
         log.info("queryFromPrometheus 的 url：{}", urlBuilder);
@@ -386,7 +407,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     }
 
     private QueryRangeMetricsResult queryRangeFromPrometheus(MetricsQueryRange metricsQueryRange) {
-        StringBuilder urlBuilder = replaceMetricsTag(metricsQueryRange.getMetricsTag(), metricsQueryRange.getNodeName(), metricsQueryRange.getInstance(), PROMETHEUS_QUERY_RANGE_URL);
+        StringBuilder urlBuilder = replaceRangeMetricsTag(metricsQueryRange.getMetricsTag(), metricsQueryRange.getNodeName(), metricsQueryRange.getInstance());
         urlBuilder.append("&start=").append(metricsQueryRange.getStart());
         urlBuilder.append("&end=").append(metricsQueryRange.getEnd());
         urlBuilder.append("&step=").append(metricsQueryRange.getStep());
@@ -397,7 +418,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return entity.getBody();
     }
 
-    private StringBuilder replaceMetricsTag(String metricsTag, String nodeName, String instance, String prometheusQueryUrl) {
+    private StringBuilder replaceMetricsTag(String metricsTag, String nodeName, String instance) {
         if (StrUtil.isNotBlank(nodeName)) {
             if (ALL_TAG.equals(nodeName)) {
                 metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
@@ -426,7 +447,36 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             }
         }
 
-        String url = PROMETHEUS_URL + prometheusQueryUrl + metricsTag;
+        String url = PROMETHEUS_URL + ResourceMonitorServiceImpl.PROMETHEUS_QUERY_URL + metricsTag;
+        return new StringBuilder(url);
+    }
+
+    private StringBuilder replaceRangeMetricsTag(String metricsTag, String nodeName, String instance) {
+        if (StrUtil.isNotBlank(nodeName)) {
+            if (ALL_TAG.equals(nodeName)) {
+                metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
+            } else {
+                metricsTag = metricsTag.replace(PrometheusMetricsConstant.NODE_NAME_REPLACE_TAG, nodeName);
+            }
+        }
+
+        if (StrUtil.isNotBlank(instance)) {
+            if (ALL_TAG.equals(instance)) {
+                metricsTag = metricsTag.replace(PrometheusMetricsConstant.INSTANCE_NAME_REPLACE_TAG, PrometheusMetricsConstant.ALL_NODE_NAME);
+            } else {
+                metricsTag = metricsTag.replace(PrometheusMetricsConstant.INSTANCE_NAME_REPLACE_TAG, instance);
+            }
+        }
+
+        if (metricsTag.contains(PLUS_TAG)) {
+            try {
+                metricsTag = URLEncoder.encode(metricsTag, "UTF-8");
+            } catch (Exception e) {
+                log.error("特殊字符处理异常", e);
+            }
+        }
+
+        String url = PROMETHEUS_URL + ResourceMonitorServiceImpl.PROMETHEUS_QUERY_RANGE_URL + metricsTag;
         return new StringBuilder(url);
     }
 

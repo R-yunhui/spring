@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * @author renyunhui
@@ -23,9 +23,11 @@ public class NodeResourceVariationInfo {
 
     private String instance;
 
-    private Map<Long, String> variationInfoMap;
+    private List<String> timeList;
 
-    private Map<Long, Double> receiveBytes;
+    private List<Double> variationInfoList;
 
-    private Map<Long, Double> sendBytes;
+    private List<Double> receiveBytes;
+
+    private List<Double> sendBytes;
 }
