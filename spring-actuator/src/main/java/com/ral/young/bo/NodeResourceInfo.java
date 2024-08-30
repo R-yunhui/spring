@@ -24,4 +24,6 @@ public class NodeResourceInfo {
     private Double used;
 
     private Double total;
+
+    private String unit;
 }

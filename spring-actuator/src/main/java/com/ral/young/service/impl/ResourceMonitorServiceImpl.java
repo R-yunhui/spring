@@ -1,7 +1,6 @@
 package com.ral.young.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -25,7 +24,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author renyunhuiCluster node status
@@ -195,20 +197,17 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         MetricsQuery metricsQuery = MetricsQuery.builder().metricsTag(PrometheusMetricsConstant.SUM_KUBE_NODE_STATUS_ALLOCATABLE_CPU).dateTime(getCurDateTime()).nodeName(nodeName).instance(instance).build();
         QueryMetricsResult allCpuCoreQueryResult = queryFromPrometheus(metricsQuery);
 
-        metricsQuery.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL);
-        QueryMetricsResult usageCpuCoreQueryResult = queryFromPrometheus(metricsQuery);
         List<NodeResourceInfo> clusterCpuCoreInfos = new ArrayList<>();
-        if (ObjectUtil.isAllNotEmpty(allCpuCoreQueryResult, usageCpuCoreQueryResult)) {
+        if (ObjectUtil.isAllNotEmpty(allCpuCoreQueryResult)) {
             List<QueryMetricsResult.DataDTO.ResultDTO> allCpuCoreResult = allCpuCoreQueryResult.getData().getResult();
-            List<QueryMetricsResult.DataDTO.ResultDTO> usageCpuCoreResult = usageCpuCoreQueryResult.getData().getResult();
-            for (int i = 0, n = allCpuCoreResult.size(); i < n; i++) {
-                double allCpuCoreSize = allCpuCoreResult.get(i).getValue().get(1);
-                double usageCpuCore = usageCpuCoreResult.get(i).getValue().get(1);
+            for (QueryMetricsResult.DataDTO.ResultDTO resultDTO : allCpuCoreResult) {
+                double allCpuCoreSize = resultDTO.getValue().get(1);
                 clusterCpuCoreInfos.add(NodeResourceInfo.builder()
                         .total(allCpuCoreSize)
-                        .used(formatDouble(usageCpuCore))
+                        .used(0.00)
                         .nodeName(nodeName)
                         .instance(instance)
+                        .unit("个")
                         .build());
             }
         }
@@ -236,11 +235,13 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 // 单位 GB
                 double free = freeMemoryResult.get(i).getValue().get(1) / 1024;
                 double used = usedMemoryResult.get(i).getValue().get(1) / 1024;
+
                 clusterNodeInfoList.add(NodeResourceInfo.builder()
                         .nodeName(nodeName)
                         .instance(instance)
                         .used(formatDouble(used))
                         .total(formatDouble(free + used))
+                        .unit("GB")
                         .build());
             }
         }
@@ -253,15 +254,26 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         if (ObjectUtil.isAllNotEmpty(allMemoryQueryResult, usageMemoryQueryResult)) {
             List<QueryMetricsResult.DataDTO.ResultDTO> allMemoryResult = allMemoryQueryResult.getData().getResult();
             List<QueryMetricsResult.DataDTO.ResultDTO> usageMemoryResult = usageMemoryQueryResult.getData().getResult();
+            String unit = "GB";
+            int size = 1024 * 1024 * 1024;
+            long threshold = size * 10000L;
+            boolean match = allMemoryResult.stream().anyMatch(o -> o.getValue().get(1) > threshold) || usageMemoryResult.stream().anyMatch(o -> o.getValue().get(1)  > threshold);
             for (int i = 0, n = allMemoryResult.size(); i < n; i++) {
-                double allMemorySize = allMemoryResult.get(i).getValue().get(1);
-                double usageMemorySize = usageMemoryResult.get(i).getValue().get(1);
+                double allMemorySize = allMemoryResult.get(i).getValue().get(1) / size;
+                double usageMemorySize = usageMemoryResult.get(i).getValue().get(1) / size;
                 // 单位暂定为 GB
+                if (match) {
+                    allMemorySize /= 1024;
+                    usageMemorySize /= 1024;
+                    unit = "TB";
+                }
+
                 result.add(NodeResourceInfo.builder()
-                        .total(formatDouble(allMemorySize / 1024 / 1024 / 1024))
-                        .used(formatDouble(usageMemorySize / 1024 / 1024 / 1024))
+                        .total(formatDouble(allMemorySize ))
+                        .used(formatDouble(usageMemorySize ))
                         .nodeName(nodeName)
                         .instance(instance)
+                        .unit(unit)
                         .build());
             }
         }
@@ -348,10 +360,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 List<Double> variationInfoList = new ArrayList<>();
                 values.forEach(value -> {
                     long timeStamp = (long) (value.get(0) * 1000);
-                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), "MM-dd HH:mm"));
                     variationInfoList.add(formatDouble(value.get(1) * 100));
                 });
                 resourceVariationInfo.setTimeList(timeList);
+                resourceVariationInfo.setUnit("%");
                 resourceVariationInfo.setVariationInfoList(variationInfoList);
                 result.add(resourceVariationInfo);
             }
@@ -377,6 +390,16 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         if (ObjectUtil.isAllNotEmpty(acceptQueryResult, sendQueryResult)) {
             List<QueryRangeMetricsResult.DataDTO.ResultDTO> acceptResult = acceptQueryResult.getData().getResult();
             List<QueryRangeMetricsResult.DataDTO.ResultDTO> sendResult = sendQueryResult.getData().getResult();
+            int size = 1024 * 1024;
+            long threshold = size * 10000L;
+            boolean match = acceptResult.stream().anyMatch(o -> o.getValues().stream().anyMatch(i -> i.get(1) > threshold))
+                    || sendResult.stream().anyMatch(o -> o.getValues().stream().anyMatch(i -> i.get(1) > threshold));
+            String unit = "MB";
+
+            if (match) {
+                unit = "GB";
+            }
+
             for (int i = 0, n = acceptResult.size(); i < n; i++) {
                 QueryRangeMetricsResult.DataDTO.ResultDTO acceptResultDTO = acceptResult.get(i);
                 QueryRangeMetricsResult.DataDTO.ResultDTO sendResultDTO = sendResult.get(i);
@@ -384,13 +407,26 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 List<String> timeList = new ArrayList<>();
                 List<Double> receiveBytes = new ArrayList<>();
                 List<Double> sendBytes = new ArrayList<>();
-                // 暂定 GB 为单位
+
                 acceptResultDTO.getValues().forEach(value -> {
                     long timeStamp = (long) (value.get(0) * 1000);
-                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
-                    receiveBytes.add(formatDouble(value.get(1) / 1024 / 1024 / 1024));
+                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), "MM-dd HH:mm"));
+                    double accept = value.get(1) / size;
+                    if (match) {
+                        accept /= 1024;
+                    }
+
+                    receiveBytes.add(formatDouble(accept));
                 });
-                sendResultDTO.getValues().forEach(value -> sendBytes.add(formatDouble(value.get(1) / 1024 / 1024 / 1024)));
+
+                sendResultDTO.getValues().forEach(value -> {
+                    double send = value.get(1) / size;
+                    if (match) {
+                        send /= 1024;
+                    }
+
+                    sendBytes.add(formatDouble(send));
+                });
 
                 String nodeName;
                 String instance;
@@ -400,14 +436,14 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                     nodeName = instanceNodeMap.get(instance);
                 } else {
                     nodeName = metricsQueryRange.getNodeName();
-                    instance= metricsQueryRange.getInstance();
+                    instance = metricsQueryRange.getInstance();
                 }
-
 
                 clusterIoDetailList.add(NodeResourceVariationInfo.builder()
                         .nodeName(nodeName)
                         .instance(instance)
                         .timeList(timeList)
+                        .unit(unit)
                         .receiveBytes(receiveBytes)
                         .sendBytes(sendBytes)
                         .build());
@@ -433,10 +469,11 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         List<Double> variationInfoList = new ArrayList<>();
         values.forEach(value -> {
             long timeStamp = (long) (value.get(0) * 1000);
-            timeList.add(DateUtil.format(DateUtil.date(timeStamp), DatePattern.NORM_DATETIME_PATTERN));
+            timeList.add(DateUtil.format(DateUtil.date(timeStamp), "MM-dd HH:mm"));
             variationInfoList.add(formatDouble(value.get(1)));
         });
         resourceVariationInfo.setTimeList(timeList);
+        resourceVariationInfo.setUnit("%");
         resourceVariationInfo.setVariationInfoList(variationInfoList);
         clusterMemoryDetails.add(resourceVariationInfo);
     }

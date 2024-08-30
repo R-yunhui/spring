@@ -30,4 +30,6 @@ public class NodeResourceVariationInfo {
     private List<Double> receiveBytes;
 
     private List<Double> sendBytes;
+
+    private String unit;
 }
