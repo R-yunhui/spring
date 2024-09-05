@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,7 +23,7 @@ import javax.annotation.Resource;
  */
 @Service
 @Slf4j
-public class TestService {
+public class TestService implements ApplicationRunner {
 
     private boolean taskOneEnable = true;
 
@@ -31,7 +33,7 @@ public class TestService {
 
     private boolean taskFourEnable = true;
 
-    private String token = "n2zrARX2gt74ECHcU_sU7ZqG-Lx1z1u5sfsavrsV";
+    private String token = "VKFa7UKow9CfvGH-RxIYIX-9vWvV07MXkQXe8_56";
 
     @Resource
     private RestTemplate restTemplate;
@@ -63,6 +65,25 @@ public class TestService {
             } catch (Exception e) {
                 log.error("【不按规定车道行驶测试告警数据】 推送失败，errorMsg：", e);
             }
+        }
+    }
+
+    public void testSendAlarmDataFive() {
+        try {
+            for (int i = 0; i < 10; i ++) {
+                String data = "{\"boxes\":[{\"height\":42,\"width\":90,\"x\":1066,\"y\":157}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1830585359525699585\",\"tenantId\":\"1830585359127240705\",\"zCoordinate\":0.0,\"channelName\":\"IP PTZ Camera\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":1.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20240904/13/36/4/7326cb53b2fe6ba0fa9f14bc03785e2c.jpg?download=0\",\"score\":0.83984375,\"alarmType\":\"PersonCountSnap\",\"cameraId\":\"1830846804224794626\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"00:00\",\"endTime\":\"23:59\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1830585653932556291\"},\"ability\":\"人员计数\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
+                Result result = getResult(data);
+
+                ResponseEntity<JSONObject> response = getResponse(result);
+                JSONObject body = response.getBody();
+                if (SUCCESS_CODE.equals(body.getInt(STATUS))) {
+                    log.info("测试 推送成功，发送时间：{}，taskId：{} , eventId：{} ，resp：{}", DateUtil.now(), result.taskId, result.eventId, body);
+                } else {
+                    log.error("测试 推送失败，发送时间：{}，taskId：{} , eventId：{} ，resp：{}", DateUtil.now(), result.taskId, result.eventId, body);
+                }
+            }
+        } catch (Exception e) {
+            log.error("测试 推送失败，errorMsg：", e);
         }
     }
 
@@ -165,7 +186,7 @@ public class TestService {
         headers.add("x-auth-token", token);
 
         HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
-        return restTemplate.postForEntity("http://192.168.2.200:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        return restTemplate.postForEntity("http://192.168.2.20:31800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
     }
 
     private static Result getResult(String data) {
@@ -180,6 +201,11 @@ public class TestService {
         jsonObject.replace(EVENT_ID, eventId);
         jsonObject.replace(TS, timeStamp);
         return new Result(jsonObject, taskId, eventId);
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        testSendAlarmDataFive();
     }
 
     private static class Result {
