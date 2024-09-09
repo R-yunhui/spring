@@ -23,6 +23,8 @@ public class GpuInfo {
 
     private String instance;
 
+    private String gpuModelName;
+
     private List<GpuCardInfo> gpuCardInfos;
 
     @AllArgsConstructor

@@ -24,10 +24,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author renyunhuiCluster node status
@@ -39,7 +37,7 @@ import java.util.Map;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private static final String PROMETHEUS_URL = "http://192.168.2.20:39090";
+    private static final String PROMETHEUS_URL = "http://10.10.1.103:39090";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "/api/v1/query_range?query=";
 
@@ -54,6 +52,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
     private static final String PLUS_TAG = "+";
 
     public static final String HOSTNAME_TAG = "Hostname";
+
+    private static final String GPU_TAG = "gpu";
 
     private final Map<String, String> nodeInstanceMap = new HashMap<>(16);
 
@@ -573,6 +573,78 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         BigDecimal bd = BigDecimal.valueOf(num);
         BigDecimal result = bd.setScale(2, RoundingMode.HALF_UP);
         return result.doubleValue();
+    }
+
+    public static double formatDouble(double num, int bit) {
+        BigDecimal bd = BigDecimal.valueOf(num);
+        BigDecimal result = bd.setScale(bit, RoundingMode.HALF_UP);
+        return result.doubleValue();
+    }
+
+    @Override
+    public List<GpuInfo> queryGpuInfo() {
+        MetricsQuery metricsQuery = new MetricsQuery();
+        metricsQuery.setDateTime(getCurDateTime());
+        metricsQuery.setMetricsTag("sum(DCGM_FI_DEV_FB_USED{Hostname=~\"^.*$\"}) by (Hostname,gpu,instance,modelName)");
+        QueryMetricsResult usedMemoryResult = queryFromPrometheus(metricsQuery);
+
+        metricsQuery.setMetricsTag("sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"^.*$\"}) by (Hostname,gpu,instance,modelName)");
+        QueryMetricsResult freeMemoryResult = queryFromPrometheus(metricsQuery);
+
+        List<GpuInfo> gpuInfoList = new ArrayList<>();
+        if (ObjectUtil.isAllNotEmpty(usedMemoryResult, freeMemoryResult)) {
+            List<QueryMetricsResult.DataDTO.ResultDTO> result = usedMemoryResult.getData().getResult();
+            for (int i = 0, n = result.size(); i < n; i++) {
+                Map<String, String> metric = result.get(i).getMetric();
+                List<Double> usedMemoryValue = usedMemoryResult.getData().getResult().get(i).getValue();
+                List<Double> freeMemoryValue = freeMemoryResult.getData().getResult().get(i).getValue();
+                log.info("total:{}", (freeMemoryValue.get(1) + usedMemoryValue.get(1)) / 1024);
+                // 单位取G，总显存向上取整，已使用显存保留一位小数
+                double gpuMemorySize = Math.ceil(formatDouble((freeMemoryValue.get(1) + usedMemoryValue.get(1)) / 1024, 2));
+                double gpuMemoryUsed = formatDouble(usedMemoryValue.get(1) / 1024, 1);
+                double gpuUtilizationRate = formatDouble(gpuMemoryUsed / gpuMemorySize, 2);
+
+                String nodeName = metric.get(HOSTNAME_TAG);
+                Optional<GpuInfo> first = gpuInfoList.stream().filter(o -> nodeName.equals(o.getNodeName())).findFirst();
+                if (first.isPresent()) {
+                    first.get().getGpuCardInfos().add(
+                            GpuInfo.GpuCardInfo.builder()
+                                    .gpuIndex(metric.get(GPU_TAG))
+                                    .gpuUtilizationRate(gpuUtilizationRate)
+                                    .gpuMemorySize(gpuMemorySize)
+                                    .gpuMemoryUsed(gpuMemoryUsed)
+                                    .canSelect(gpuMemoryUsed == 0)
+                                    .build()
+                    );
+                } else {
+                    List<GpuInfo.GpuCardInfo> gpuCardInfos = new ArrayList<>();
+                    gpuCardInfos.add(GpuInfo.GpuCardInfo.builder()
+                            .gpuIndex(metric.get(GPU_TAG))
+                            .gpuUtilizationRate(gpuUtilizationRate)
+                            .gpuMemorySize(gpuMemorySize)
+                            .gpuMemoryUsed(gpuMemoryUsed)
+                            .canSelect(gpuMemoryUsed == 0)
+                            .build());
+
+                    gpuInfoList.add(GpuInfo.builder()
+                            .nodeName(metric.get(HOSTNAME_TAG))
+                            .instance(metric.get(INSTANCE_TAG))
+                            .gpuCardInfos(gpuCardInfos)
+                            .gpuModelName(metric.get("modelName"))
+                            .build()
+                    );
+                }
+            }
+        }
+
+        if (CollUtil.isNotEmpty(gpuInfoList)) {
+            for (GpuInfo gpuInfo : gpuInfoList) {
+                List<GpuInfo.GpuCardInfo> sortedList = gpuInfo.getGpuCardInfos().stream().sorted((o1, o2) -> StrUtil.compare(o1.getGpuIndex(), o2.getGpuIndex(), true)).collect(Collectors.toList());
+                gpuInfo.setGpuCardInfos(sortedList);
+            }
+        }
+
+        return gpuInfoList;
     }
 }
 

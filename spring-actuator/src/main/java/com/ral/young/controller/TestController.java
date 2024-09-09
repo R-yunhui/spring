@@ -28,6 +28,11 @@ public class TestController {
         return resourceMonitorService.queryClusterNodeInfo();
     }
 
+    @GetMapping(value = "/api/v1/resource-monitor/gpuInfo")
+    public List<GpuInfo> queryGpuInfo() {
+        return resourceMonitorService.queryGpuInfo();
+    }
+
     @GetMapping(value = "/api/v1/resource-monitor/nodeStatus")
     public ClusterNodeStatus clusterNodeStatus() {
         return resourceMonitorService.queryClusterNodeStatus();

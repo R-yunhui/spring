@@ -43,4 +43,6 @@ public interface ResourceMonitorService {
      * @return 集群节点状态
      */
     ClusterNodeStatus queryClusterNodeStatus();
+
+    List<GpuInfo> queryGpuInfo();
 }
