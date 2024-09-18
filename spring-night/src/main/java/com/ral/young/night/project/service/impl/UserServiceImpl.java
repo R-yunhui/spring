@@ -66,7 +66,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<User> users = generateUserInfo(10);
         saveBatch(users);
 
-        users.forEach(user -> user.setName(user.getName() + "update"));
+        users.forEach(user -> {
+            user.setName(user.getName() + "update");
+            user.setAge(user.getAge() + 1);
+        });
 
         int i = userMapper.batchUpdateUserName(users);
         log.info("修改成功的数据为：{}", i);

@@ -13,6 +13,14 @@
             </foreach>
             end
         </set>
+
+        <set>
+            age = case
+            <foreach collection="list" item="item" index="index" separator=" " open=" " close=" ">
+                when id = #{item.id} then #{item.age}
+            </foreach>
+            end
+        </set>
     </update>
 </mapper>
 

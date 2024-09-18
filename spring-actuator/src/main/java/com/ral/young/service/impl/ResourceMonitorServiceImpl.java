@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private static final String PROMETHEUS_URL = "http://10.10.1.103:39090";
+    private static final String PROMETHEUS_URL = "http://192.168.2.168:30089/";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "/api/v1/query_range?query=";
 

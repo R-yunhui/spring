@@ -33,7 +33,7 @@ public class TestService implements ApplicationRunner {
 
     private boolean taskFourEnable = true;
 
-    private String token = "8KW5tjqv8POGwTfk7kbH4s--Ha5YbLbLxfEkZANs";
+    private String token = "TQ6jbZq4ArXyybhAnweb9Il5TFmPeaFAgG-_hRhz";
 
     @Resource
     private RestTemplate restTemplate;
@@ -71,7 +71,7 @@ public class TestService implements ApplicationRunner {
     public void testSendAlarmDataFive() {
         try {
             for (int i = 0; i < 30; i ++) {
-                String data = "{\"boxes\":[{\"height\":42,\"width\":90,\"x\":1066,\"y\":157}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1830585359525699585\",\"tenantId\":\"1830585359127240705\",\"zCoordinate\":0.0,\"channelName\":\"IP PTZ Camera\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":1.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20240904/13/36/4/7326cb53b2fe6ba0fa9f14bc03785e2c.jpg?download=0\",\"score\":0.83984375,\"alarmType\":\"PersonCountSnap\",\"cameraId\":\"1830846804224794626\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"00:00\",\"endTime\":\"23:59\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1830585653932556291\"},\"ability\":\"人员计数\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
+                String data = "{\"boxes\":[{\"height\":42,\"width\":90,\"x\":1066,\"y\":157}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1830585359525699585\",\"tenantId\":\"1830585359127240705\",\"zCoordinate\":0.0,\"channelName\":\"IP PTZ Camera\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":1.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20240808/15/54/8/bcd48589408b89a0d87fc704a23086dd.png?download=0\",\"score\":0.83984375,\"alarmType\":\"PersonCountSnap\",\"cameraId\":\"1830846804224794626\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"00:00\",\"endTime\":\"23:59\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1830585653932556291\"},\"ability\":\"人员计数\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
                 Result result = getResult(data);
 
                 ResponseEntity<JSONObject> response = getResponse(result);

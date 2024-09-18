@@ -17,12 +17,12 @@ public class PrometheusMetricsConstant {
     /**
      * 所有节点数
      */
-    public static final String SUM_KUBE_NODE_INFO = "sum(kube_node_info)";
+    public static final String SUM_KUBE_NODE_INFO = "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})";
 
     /**
      * 不可用节点数
      */
-    public static final String SUM_KUBE_NODE_SPEC_UNSCHEDULABLE = "sum(kube_node_spec_unschedulable)";
+    public static final String SUM_KUBE_NODE_SPEC_UNSCHEDULABLE = "sum(kube_node_status_condition{condition=\"Ready\",status=~\"unknown|false\"})";
 
     /**
      * 集群总内存

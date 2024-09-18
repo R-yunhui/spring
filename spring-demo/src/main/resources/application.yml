@@ -5,9 +5,9 @@ spring:
   datasource:
     # 初始化sql 脚本
     druid:
-      url: jdbc:mysql://localhost:3306/study?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+      url: jdbc:mysql://192.168.2.20:43206/test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
       username: root
-      password: ryh123.0
+      password: Koala_MySQL#20Xx..A..
       driver-class-name: com.mysql.cj.jdbc.Driver
       # 初始化物理连接个数
       initial-size: 5
@@ -82,4 +82,6 @@ mybatis-plus-join:
   # 副表逻辑删除条件的位置，支持where、on
   # 默认ON （1.4.7.2及之前版本默认为where）
   logic-del-type: on
+  # 非空判断策略
+  if-exists: not_blank
 
