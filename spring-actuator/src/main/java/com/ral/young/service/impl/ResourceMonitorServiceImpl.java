@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
-    private static final String PROMETHEUS_URL = "http://192.168.2.168:30089/";
+    private static final String PROMETHEUS_URL = "http://192.168.2.20:39090/";
 
     private static final String PROMETHEUS_QUERY_RANGE_URL = "/api/v1/query_range?query=";
 
@@ -55,9 +55,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private static final String GPU_TAG = "gpu";
 
-    private final Map<String, String> nodeInstanceMap = new HashMap<>(16);
+    private static final Map<String, String> nodeInstanceMap = new HashMap<>(16);
 
-    private final Map<String, String> instanceNodeMap = new HashMap<>(16);
+    private static final Map<String, String> instanceNodeMap = new HashMap<>(16);
 
     @Resource
     private RestTemplate restTemplate;
@@ -97,13 +97,13 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 result = queryCpuCoreDetails(metricsQueryRange);
                 break;
             case DISK:
-                result = queryDiskUsageDetails(metricsQueryRange);
+                result = queryDiskUsageDetailsTwo(metricsQueryRange);
                 break;
             case GPU:
-                result = queryGpuMemoryDetails(metricsQueryRange);
+                result = queryGpuMemoryDetailsTwo(metricsQueryRange);
                 break;
             case MEMORY:
-                result = queryMemoryUsageDetails(metricsQueryRange);
+                result = queryMemoryUsageDetailsTwo(metricsQueryRange);
                 break;
             case DISK_IO:
                 result = queryDiskIoDetails(metricsQueryRange);
@@ -257,7 +257,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
             String unit = "GB";
             int size = 1024 * 1024 * 1024;
             long threshold = size * 10000L;
-            boolean match = allMemoryResult.stream().anyMatch(o -> o.getValue().get(1) > threshold) || usageMemoryResult.stream().anyMatch(o -> o.getValue().get(1)  > threshold);
+            boolean match = allMemoryResult.stream().anyMatch(o -> o.getValue().get(1) > threshold) || usageMemoryResult.stream().anyMatch(o -> o.getValue().get(1) > threshold);
             for (int i = 0, n = allMemoryResult.size(); i < n; i++) {
                 double allMemorySize = allMemoryResult.get(i).getValue().get(1) / size;
                 double usageMemorySize = usageMemoryResult.get(i).getValue().get(1) / size;
@@ -269,8 +269,8 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 }
 
                 result.add(NodeResourceInfo.builder()
-                        .total(formatDouble(allMemorySize ))
-                        .used(formatDouble(usageMemorySize ))
+                        .total(formatDouble(allMemorySize))
+                        .used(formatDouble(usageMemorySize))
                         .nodeName(nodeName)
                         .instance(instance)
                         .unit(unit)
@@ -288,6 +288,20 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return result;
     }
 
+    public List<NodeResourceVariationInfo> queryDiskUsageDetailsTwo(MetricsQueryRange metricsQueryRange) {
+        long start = System.currentTimeMillis();
+        // 先查询总的
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_LIMIT_BYTES);
+        QueryRangeMetricsResult totalMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+
+        // 在查询使用的
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_USAGE_BYTES);
+        QueryRangeMetricsResult usedMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+        List<NodeResourceVariationInfo> result = buildQueryResult(totalMetricsResult, usedMetricsResult, 1024 * 1024 * 1024);
+        log.info("统计集群磁盘使用率情况耗时：{} ms", System.currentTimeMillis() - start);
+        return result;
+    }
+
     public List<NodeResourceVariationInfo> queryCpuCoreDetails(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_IRATE_CONTAINER_CPU_USAGE_SECONDS_TOTAL_DETAIL);
@@ -298,6 +312,20 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         }
         log.info("统计集群CPU使用率情况耗时：{} ms", System.currentTimeMillis() - start);
         return clusterCpuCoreDetails;
+    }
+
+    public List<NodeResourceVariationInfo> queryMemoryUsageDetailsTwo(MetricsQueryRange metricsQueryRange) {
+        long start = System.currentTimeMillis();
+        // 先查询总的
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_TOTAL_MEMORY);
+        QueryRangeMetricsResult totalMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+
+        // 在查询使用的
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_FREE_MEMORY);
+        QueryRangeMetricsResult usedMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+        List<NodeResourceVariationInfo> result = buildQueryResult(totalMetricsResult, usedMetricsResult, 1024 * 1024 * 1024);
+        log.info("统计集群内存使用率情况耗时：{} ms", System.currentTimeMillis() - start);
+        return result;
     }
 
     public List<NodeResourceVariationInfo> queryDiskIoDetails(MetricsQueryRange metricsQueryRange) {
@@ -329,6 +357,89 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
         List<NodeResourceVariationInfo> result = buildNodeResource(metricsQueryRange);
         log.info("统计集群GPU内存使用率情况耗时：{} ms", System.currentTimeMillis() - start);
+        return result;
+    }
+
+    public List<NodeResourceVariationInfo> queryGpuMemoryDetailsTwo(MetricsQueryRange metricsQueryRange) {
+        long start = System.currentTimeMillis();
+        metricsQueryRange.setSpecific(true);
+        // 先查询总的
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_TOTAL_MEMORY);
+        QueryRangeMetricsResult totalMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+
+        // 在查询使用的
+        metricsQueryRange.setSpecific(false);
+        metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.DCGM_GPU_USED_MEMORY);
+        QueryRangeMetricsResult usedMetricsResult = queryRangeFromPrometheus(metricsQueryRange);
+        List<NodeResourceVariationInfo> result = buildQueryResult(totalMetricsResult, usedMetricsResult, 1024);
+        log.info("统计集群GPU使用率情况耗时：{} ms", System.currentTimeMillis() - start);
+        return result;
+    }
+
+    private static List<NodeResourceVariationInfo> buildQueryResult(QueryRangeMetricsResult totalMetricsResult, QueryRangeMetricsResult usedMetricsResult, int size) {
+        List<NodeResourceVariationInfo> result = new ArrayList<>();
+        if (ObjectUtil.isAllNotEmpty(totalMetricsResult, usedMetricsResult)) {
+            List<QueryRangeMetricsResult.DataDTO.ResultDTO> totalResult = totalMetricsResult.getData().getResult();
+            List<QueryRangeMetricsResult.DataDTO.ResultDTO> usedResult = usedMetricsResult.getData().getResult();
+
+            String elseUnit = "GB";
+            long threshold = size * 10000L;
+            boolean match = totalResult.stream().anyMatch(o -> o.getValues().stream().anyMatch(i -> i.get(1) > threshold)) || usedResult.stream().anyMatch(o -> o.getValues().stream().anyMatch(i -> i.get(1) > threshold));
+
+
+            int m = totalResult.size();
+            for (int i = 0; i < m; i++) {
+                QueryRangeMetricsResult.DataDTO.ResultDTO resultDTO = totalResult.get(i);
+                String instance;
+                String nodeName;
+                if (resultDTO.getMetric().containsKey(HOSTNAME_TAG)) {
+                    nodeName = resultDTO.getMetric().get(HOSTNAME_TAG);
+                    instance = nodeInstanceMap.get(nodeName);
+                } else {
+                    instance = totalResult.get(i).getMetric().get(INSTANCE_TAG);
+                    nodeName = instanceNodeMap.get(instance);
+                }
+
+                NodeResourceVariationInfo resourceVariationInfo = new NodeResourceVariationInfo();
+                resourceVariationInfo.setInstance(instance);
+                resourceVariationInfo.setNodeName(nodeName);
+
+                List<List<Double>> totalValues = totalResult.get(i).getValues();
+                List<List<Double>> usedValues = usedResult.get(i).getValues();
+                List<Double> totalList = new ArrayList<>();
+                List<Double> uesdList = new ArrayList<>();
+                List<Double> variationInfoList = new ArrayList<>();
+                List<String> timeList = new ArrayList<>();
+
+                for (int j = 0, n = totalValues.size(); j < n; j++) {
+                    Double total = totalValues.get(j).get(1);
+                    Double used = usedValues.get(j).get(1);
+
+                    long timeStamp = (long) (totalValues.get(j).get(0) * 1000);
+                    timeList.add(DateUtil.format(DateUtil.date(timeStamp), "MM-dd HH:mm"));
+
+                    Double variation = formatDouble(used / total);
+                    variationInfoList.add(variation);
+
+                    total /= size;
+                    used /= size;
+                    if (match) {
+                        total /= 1024;
+                        used /= 1024;
+                        elseUnit = "TB";
+                    }
+                    totalList.add(formatDouble(total));
+                    uesdList.add(formatDouble(used));
+                }
+                resourceVariationInfo.setTotalList(totalList);
+                resourceVariationInfo.setUsedList(uesdList);
+                resourceVariationInfo.setVariationInfoList(variationInfoList);
+                resourceVariationInfo.setTimeList(timeList);
+                resourceVariationInfo.setUnit("%");
+                resourceVariationInfo.setUnit(elseUnit);
+                result.add(resourceVariationInfo);
+            }
+        }
         return result;
     }
 

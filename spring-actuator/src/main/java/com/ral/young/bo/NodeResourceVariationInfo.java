@@ -23,6 +23,10 @@ public class NodeResourceVariationInfo {
 
     private String instance;
 
+    private List<Double> usedList;
+
+    private List<Double> totalList;
+
     private List<String> timeList;
 
     private List<Double> variationInfoList;
@@ -32,4 +36,6 @@ public class NodeResourceVariationInfo {
     private List<Double> sendBytes;
 
     private String unit;
+
+    private String elseUnit;
 }

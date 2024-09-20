@@ -32,7 +32,7 @@ public class PrometheusMetricsConstant {
     /**
      * 集群已使用内存
      */
-    public static final String SUM_NODE_FREE_MEMORY = "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance) - sum(node_memory_MemFree_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
+    public static final String SUM_NODE_FREE_MEMORY = "sum(node_memory_MemTotal_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance) - sum(node_memory_MemAvailable_bytes{origin_prometheus=~\"\",job=~\"kubernetes-service-endpoints\",instance=~\"$instance$\"}) by (instance)";
 
     /**
      * 集群节点内存使用率
@@ -110,4 +110,10 @@ public class PrometheusMetricsConstant {
      * gpu 空闲内存 显存
      */
     public static final String DCGM_GPU_FREE_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname)";
+
+    /**
+     * gpu 总内存 显存
+     */
+    public static final String DCGM_GPU_TOTAL_MEMORY = "sum(DCGM_FI_DEV_FB_FREE{Hostname=~\"$nodeName$\"}) by (Hostname) + sum(DCGM_FI_DEV_FB_USED{Hostname=~\"$nodeName$\"}) by (Hostname)";
+
 }
