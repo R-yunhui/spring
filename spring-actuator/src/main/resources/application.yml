@@ -6,6 +6,26 @@ server:
       enabled: true
 
 spring:
+
+  datasource:
+    # 初始化sql 脚本
+    url: jdbc:mysql://common-store-sql-mysql:3306/osmagic_ops?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: root
+    password: Koala_MySQL#20Xx..A..
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    url: jdbc:mysql://localhost:3306/study?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+  #    username: root
+  #    password: ryh123.0
+  #    hikari:
+  #      connection-timeout: 10000       # 等待来自池的连接的最大毫秒数。如果超过此时间而没有可用的连接，则会抛出SQLException。可接受的最低连接超时为250 ms。 默认值：30000（30秒）
+  #      idle-timeout: 60000             # 允许连接在池中保持空闲状态的最长时间
+  #      max-lifetime: 60000             # 控制池中连接的最大生存期。使用中的连接永远不会停止使用，只有在关闭连接后才将其删除
+  #      maximum-pool-size: 10           # 控制允许池达到的最大大小，包括空闲和使用中的连接
+  #      minimum-idle: 5                 # 控制HikariCP尝试在池中维护的最小空闲连接数
+  #      pool-name: hikari               # 不同微服务可以配置不同的连接池名称
+  #      auto-commit: true               # 每次从连接池中获取的连接是否允许自定义提交
+
   banner:
     location: banner.txt
   application:
@@ -14,19 +34,9 @@ spring:
     static-locations: file:D:\\ryh\\personal\\workspace\\theme.park
   # redis 配置
   redis:
-    host: 101.43.7.180
+    host: common-store-redis-master
     port: 6379
-    password: ryh123.0
-    lettuce:
-      pool:
-        # 连接池最大连接数
-        max-active: 20
-        # 连接池最大空闲时间
-        max-idle: 20
-        # 连接池最小连接数
-        min-idle: 3
-        # 连接池最大等待时间
-        max-wait: -1
+    client-name: ops
 
 # 暴露所有端点
 management:
@@ -44,15 +54,18 @@ management:
     tags:
       application: ${spring.application.name}
 
-# prometheus 地址
-prometheus:
-  address: http://127.0.0.1:9090
 
-scheduled:
-  fixedRateTime: 30000
-  initialDelayTimeOne: 5000
-  initialDelayTimeTwo: 6000
-  initialDelayTimeThree: 7000
+## mybatis-plus 配置
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDelete    # 表中标记为逻辑删除的字段
+      logic-delete-value: 1           # 1 代表删除
+      logic-not-delete-value: 0       # 0 代表未删除
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 sql 语句
+    cache-enabled: true               # 默认开启
+
 
 
 

@@ -45,7 +45,6 @@ public class ResourceAlarmRuleServiceImpl extends ServiceImpl<ResourceAlarmRuleM
                 if (resourceAlarmRuleVO != null) {
                     resourceAlarmRule.setThreshold(resourceAlarmRuleVO.getThreshold());
                     resourceAlarmRule.setTimeDuration(resourceAlarmRuleVO.getTimeDuration());
-                    resourceAlarmRule.setUpdaterId(0L);
                 }
             }
             resourceAlarmRuleService.updateBatchById(dbResourceAlarmRule);
@@ -55,8 +54,7 @@ public class ResourceAlarmRuleServiceImpl extends ServiceImpl<ResourceAlarmRuleM
                 ResourceAlarmRule resourceAlarmRule = BeanUtil.copyProperties(resourceAlarmRuleVO, ResourceAlarmRule.class);
                 resourceAlarmRule.setDeleteFlag((byte) 0);
                 resourceAlarmRule.setTenantId(0L);
-                resourceAlarmRule.setCreatorId(0L);
-                resourceAlarmRule.setUpdaterId(0L);
+                resourceAlarmRules.add(resourceAlarmRule);
             }
             resourceAlarmRuleService.saveBatch(resourceAlarmRules);
         }

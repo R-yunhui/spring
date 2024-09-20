@@ -51,18 +51,6 @@ public class ResourceAlarmRule {
     private Byte deleteFlag;
 
     /**
-     * 创建人
-     */
-    @TableField(value = "creator_id", fill = FieldFill.INSERT)
-    private Long creatorId;
-
-    /**
-     * 修改人
-     */
-    @TableField(value = "updater_id", fill = FieldFill.INSERT_UPDATE)
-    private Long updaterId;
-
-    /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)

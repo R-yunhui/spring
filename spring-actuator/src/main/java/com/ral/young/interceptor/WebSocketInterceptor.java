@@ -34,10 +34,9 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
             // 校验连接参数，满足要求则连接
-            String key = servletServerHttpRequest.getServletRequest().getParameter("key");
             String id = servletServerHttpRequest.getServletRequest().getParameter("id");
-            log.info("ws连接 key:{} id:{}", key, id);
-            if (!StringUtils.hasLength(key) || !StringUtils.hasLength(id)) {
+            log.info("ws连接  id:{}", id);
+            if (!StringUtils.hasLength(id)) {
                 log.warn("WebSocket连接未携带key和id标识，拒绝连接");
                 return false;
             }
@@ -47,7 +46,6 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
                 return false;
             }
 
-            attributes.put("key", key);
             attributes.put("id", id);
             return true;
         }
@@ -55,7 +53,7 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
+    public void afterHandshake(@NonNull ServerHttpRequest request, @NonNull ServerHttpResponse response, @NonNull WebSocketHandler wsHandler, Exception exception) {
 
     }
 }

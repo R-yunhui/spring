@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ral.young.bo.ResourceAlarmMessage;
 import com.ral.young.enums.ResourceEnum;
@@ -41,7 +42,9 @@ public class ResourceAlarmMessageServiceImpl extends ServiceImpl<ResourceAlarmMe
 
     @Override
     public Boolean deleteResourceAlarmMessage(List<Long> ids) {
-        int count = resourceAlarmMessageMapper.update(null, new LambdaQueryWrapper<ResourceAlarmMessage>().in(ResourceAlarmMessage::getId, ids));
+        int count = resourceAlarmMessageMapper.update(null, new LambdaUpdateWrapper<ResourceAlarmMessage>()
+                .set(ResourceAlarmMessage::getDeleteFlag, 1)
+                .in(ResourceAlarmMessage::getId, ids));
         return count > 0;
     }
 

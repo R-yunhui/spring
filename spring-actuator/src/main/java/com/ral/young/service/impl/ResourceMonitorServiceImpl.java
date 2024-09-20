@@ -45,7 +45,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
     private static final String NODE_NAME_TAG = "nodename";
 
-    private static final String ALL_TAG = "all";
+    public static final String ALL_TAG = "all";
 
     private static final String INSTANCE_TAG = "instance";
 

@@ -12,7 +12,10 @@ import com.ral.young.handler.WsMessageBroadcaster;
 import com.ral.young.service.ResourceAlarmMessageService;
 import com.ral.young.service.ResourceAlarmRuleService;
 import com.ral.young.service.ResourceMonitorService;
+import com.ral.young.service.impl.ResourceMonitorServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -32,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
-public class ResourceAlarmTask {
+public class ResourceAlarmTask implements ApplicationRunner {
 
     @Resource
     private ResourceAlarmMessageService resourceAlarmMessageService;
@@ -49,6 +52,7 @@ public class ResourceAlarmTask {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 8, 1L,
             TimeUnit.MINUTES, new LinkedBlockingQueue<>(20), ThreadFactoryBuilder.create().setNamePrefix("resource-alarm-").build(),
             new ThreadPoolExecutor.CallerRunsPolicy());
+
 
     public void dealAlarmTask() {
         List<ResourceAlarmRule> resourceAlarmRules = resourceAlarmRuleService.queryAllResourceAlarmRule();
@@ -81,7 +85,7 @@ public class ResourceAlarmTask {
                 if (CollUtil.isNotEmpty(nodeResourceVariationInfos)) {
                     for (NodeResourceVariationInfo nodeResourceVariationInfo : nodeResourceVariationInfos) {
                         OptionalDouble average = nodeResourceVariationInfo.getVariationInfoList().stream().mapToDouble(Double::doubleValue).average();
-                        return average.isPresent() && average.getAsDouble() > resourceAlarmRule.getThreshold();
+                        return average.isPresent() && average.getAsDouble() > (resourceAlarmRule.getThreshold() / 100);
                     }
                 }
             }
@@ -104,11 +108,19 @@ public class ResourceAlarmTask {
         metricsQueryRange.setStart(start);
         metricsQueryRange.setEnd(end);
         metricsQueryRange.setStep(2f);
+        metricsQueryRange.setNodeName(ResourceMonitorServiceImpl.ALL_TAG);
+        metricsQueryRange.setInstance(ResourceMonitorServiceImpl.ALL_TAG);
         return metricsQueryRange;
     }
 
     private ResourceAlarmMessage createResourceAlarmMessage(ResourceEnum resourceEnum, Long tenantId, Long ruleId, Double threshold) {
         String alarmMsg = String.format(resourceEnum.getAlarmMessage(), threshold);
         return ResourceAlarmMessage.builder().message(alarmMsg).resourceEnum(resourceEnum).ruleId(ruleId).tenantId(tenantId).alarmTime(DateUtil.date()).build();
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        Thread.sleep(1000 * 60 * 10);
+        dealAlarmTask();
     }
 }

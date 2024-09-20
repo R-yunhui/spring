@@ -24,7 +24,7 @@ public enum ResourceEnum {
     /**
      * 磁盘
      */
-    DISK("磁盘", "CPU负载超过%s%%，请及时处理！"),
+    DISK("磁盘", "磁盘负载超过%s%%，请及时处理！"),
 
     /**
      * GPU
