@@ -1,5 +1,6 @@
 package com.ral.young.interceptor;
 
+import cn.hutool.core.util.IdUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
@@ -35,6 +36,10 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
             // 校验连接参数，满足要求则连接
             String id = servletServerHttpRequest.getServletRequest().getParameter("id");
+
+            // 暂时生成随机id
+            id = String.valueOf(IdUtil.getSnowflakeNextId());
+
             log.info("ws连接  id:{}", id);
             if (!StringUtils.hasLength(id)) {
                 log.warn("WebSocket连接未携带key和id标识，拒绝连接");

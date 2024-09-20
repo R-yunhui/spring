@@ -120,7 +120,7 @@ public class ResourceAlarmTask implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Thread.sleep(1000 * 60 * 10);
+        Thread.sleep(1000 * 10);
         dealAlarmTask();
     }
 }

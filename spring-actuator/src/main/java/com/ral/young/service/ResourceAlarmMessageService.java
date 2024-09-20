@@ -23,6 +23,16 @@ public interface ResourceAlarmMessageService extends IService<ResourceAlarmMessa
     List<ResourceAlarmMessageVO> queryResourceAlarmMessage();
 
     /**
+     * 根据租户id和开始结束时间查询告警信息
+     *
+     * @param tenantId 租户id
+     * @param start    开始时间
+     * @param end      结束时间
+     * @return 告警信息
+     */
+    List<ResourceAlarmMessage> queryResourceAlarmMessageByTenantId(Long tenantId, Long start, Long end);
+
+    /**
      * 删除资源告警信息
      *
      * @param ids 资源告警信息id
