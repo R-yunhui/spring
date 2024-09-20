@@ -14,6 +14,7 @@ import org.springframework.web.socket.WebSocketSession;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author renyunhui
@@ -30,7 +31,7 @@ public class WebSocketServiceImpl implements WebSocketService {
      */
     public static ConcurrentHashMap<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>(32);
 
-    private static final String CONNECTION_COUNT = "WS::CONNECTION:COUNT";
+    private static AtomicInteger connectionCount = new AtomicInteger(0);
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;
@@ -38,7 +39,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Override
     public void handlerEstablishConnection(String sessionId, WebSocketSession webSocketSession) {
         sessionMap.put(sessionId, webSocketSession);
-        Long count = redisTemplate.opsForValue().increment(CONNECTION_COUNT);
+        long count = connectionCount.incrementAndGet();
         log.info("新建 WebSocket 连接成功，【{}】，当前连接总数：{}", sessionId, count);
 
         // 订阅 redis 频道
@@ -55,7 +56,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     public void handlerCloseConnection(String sessionId, WebSocketSession webSocketSession) {
         if (ObjectUtil.isNotNull(sessionMap.remove(sessionId))) {
             sessionMap.remove(sessionId, webSocketSession);
-            Long count = redisTemplate.opsForValue().decrement(CONNECTION_COUNT);
+            long count = connectionCount.decrementAndGet();
             log.info("关闭 WebSocket 连接成功，【{}】，当前连接总数：{}", sessionId, count);
         } else {
             log.warn("关闭 WebSocket 连接异常，【{}】", sessionId);
