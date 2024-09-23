@@ -58,4 +58,11 @@ public interface ResourceAlarmMessageService extends IService<ResourceAlarmMessa
      * @param ruleId       规则id
      */
     void createResourceAlarmMessage(ResourceEnum resourceEnum, Long tenantId, Long ruleId);
+
+    /**
+     * 产生告警信息
+     *
+     * @param resourceAlarmMessageList 告警信息列表
+     */
+    void generatedAlarmList(List<ResourceAlarmMessage> resourceAlarmMessageList);
 }

@@ -2,6 +2,8 @@ package com.ral.young.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.json.JSONUtil;
+import com.ral.young.bo.ResourceAlarmMessage;
 import com.ral.young.handler.WsMessageBroadcaster;
 import com.ral.young.service.WebSocketService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +33,7 @@ public class WebSocketServiceImpl implements WebSocketService {
      */
     public static ConcurrentHashMap<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>(32);
 
-    private static AtomicInteger connectionCount = new AtomicInteger(0);
+    private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger(0);
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;
@@ -39,8 +41,8 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Override
     public void handlerEstablishConnection(String sessionId, WebSocketSession webSocketSession) {
         sessionMap.put(sessionId, webSocketSession);
-        long count = connectionCount.incrementAndGet();
-        log.info("新建 WebSocket 连接成功，【{}】，当前连接总数：{}", sessionId, count);
+        long count = CONNECTION_COUNT.incrementAndGet();
+        log.info("新建 WebSocket 连接成功，【{}】，当前服务端连接总数：{}", sessionId, count);
 
         // 订阅 redis 频道
         redisTemplate.execute((RedisCallback<Void>) connection -> {
@@ -56,7 +58,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     public void handlerCloseConnection(String sessionId, WebSocketSession webSocketSession) {
         if (ObjectUtil.isNotNull(sessionMap.remove(sessionId))) {
             sessionMap.remove(sessionId, webSocketSession);
-            long count = connectionCount.decrementAndGet();
+            long count = CONNECTION_COUNT.decrementAndGet();
             log.info("关闭 WebSocket 连接成功，【{}】，当前连接总数：{}", sessionId, count);
         } else {
             log.warn("关闭 WebSocket 连接异常，【{}】", sessionId);
@@ -91,6 +93,12 @@ public class WebSocketServiceImpl implements WebSocketService {
             return;
         }
 
-        sessionMap.forEach((k, v) -> sendMessage(k, message));
+        ResourceAlarmMessage resourceAlarmMessage = JSONUtil.toBean(message, ResourceAlarmMessage.class);
+        Long tenantId = resourceAlarmMessage.getTenantId();
+        if (-1L == tenantId) {
+            sessionMap.forEach((k, v) -> sendMessage(k, message));
+        } else {
+            sendMessage(tenantId.toString(), message);
+        }
     }
 }

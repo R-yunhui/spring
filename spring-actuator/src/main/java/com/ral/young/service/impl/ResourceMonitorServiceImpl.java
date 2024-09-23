@@ -97,13 +97,13 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                 result = queryCpuCoreDetails(metricsQueryRange);
                 break;
             case DISK:
-                result = queryDiskUsageDetailsTwo(metricsQueryRange);
+                result = queryDiskUsageDetailsNew(metricsQueryRange);
                 break;
             case GPU:
-                result = queryGpuMemoryDetailsTwo(metricsQueryRange);
+                result = queryGpuMemoryDetailsNew(metricsQueryRange);
                 break;
             case MEMORY:
-                result = queryMemoryUsageDetailsTwo(metricsQueryRange);
+                result = queryMemoryUsageDetailsNew(metricsQueryRange);
                 break;
             case DISK_IO:
                 result = queryDiskIoDetails(metricsQueryRange);
@@ -288,7 +288,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return result;
     }
 
-    public List<NodeResourceVariationInfo> queryDiskUsageDetailsTwo(MetricsQueryRange metricsQueryRange) {
+    public List<NodeResourceVariationInfo> queryDiskUsageDetailsNew(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         // 先查询总的
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_CONTAINER_FS_LIMIT_BYTES);
@@ -314,7 +314,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return clusterCpuCoreDetails;
     }
 
-    public List<NodeResourceVariationInfo> queryMemoryUsageDetailsTwo(MetricsQueryRange metricsQueryRange) {
+    public List<NodeResourceVariationInfo> queryMemoryUsageDetailsNew(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         // 先查询总的
         metricsQueryRange.setMetricsTag(PrometheusMetricsConstant.SUM_NODE_TOTAL_MEMORY);
@@ -360,7 +360,7 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         return result;
     }
 
-    public List<NodeResourceVariationInfo> queryGpuMemoryDetailsTwo(MetricsQueryRange metricsQueryRange) {
+    public List<NodeResourceVariationInfo> queryGpuMemoryDetailsNew(MetricsQueryRange metricsQueryRange) {
         long start = System.currentTimeMillis();
         metricsQueryRange.setSpecific(true);
         // 先查询总的
@@ -417,10 +417,6 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
 
                     long timeStamp = (long) (totalValues.get(j).get(0) * 1000);
                     timeList.add(DateUtil.format(DateUtil.date(timeStamp), "MM-dd HH:mm"));
-
-                    Double variation = formatDouble(used / total);
-                    variationInfoList.add(variation);
-
                     total /= size;
                     used /= size;
                     if (match) {
@@ -428,6 +424,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
                         used /= 1024;
                         elseUnit = "TB";
                     }
+
+                    Double variation = formatDouble(used / total) * 100;
+                    variationInfoList.add(variation);
                     totalList.add(formatDouble(total));
                     uesdList.add(formatDouble(used));
                 }
@@ -604,8 +603,9 @@ public class ResourceMonitorServiceImpl implements ResourceMonitorService {
         urlBuilder.append("&start=").append(metricsQueryRange.getStart());
         urlBuilder.append("&end=").append(metricsQueryRange.getEnd());
         urlBuilder.append("&step=").append(metricsQueryRange.getStep());
-
-        log.info("queryRangeFromPrometheus 的 url：{}", urlBuilder);
+        if (log.isDebugEnabled()) {
+            log.debug("queryRangeFromPrometheus 的 url：{}", urlBuilder);
+        }
         UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(urlBuilder.toString()).build(metricsQueryRange.isSpecific());
         ResponseEntity<QueryRangeMetricsResult> entity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, HttpEntity.EMPTY, QueryRangeMetricsResult.class);
         return entity.getBody();
