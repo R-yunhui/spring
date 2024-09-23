@@ -63,10 +63,15 @@ public class ResourceAlarmTask implements ApplicationRunner {
             TimeUnit.MINUTES, new LinkedBlockingQueue<>(20), ThreadFactoryBuilder.create().setNamePrefix("resource-alarm-").build(),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
+    static {
+        executor.prestartAllCoreThreads();
+    }
+
     @Scheduled(fixedDelay = 10000, initialDelay = 10000)
     public void dealAlarmTask() {
         // todo 分布式锁
-        log.info("===== 开始统计资源信息，判断是否超过了配置的阈值，时间：{} =====", DateUtil.now());
+        log.info("===== 开始统计资源信息，判断是否超过了配置的阈值 =====");
+        long start = System.currentTimeMillis();
         List<ResourceAlarmRule> resourceAlarmRules = resourceAlarmRuleService.queryAllResourceAlarmRule();
         List<ResourceAlarmMessage> resourceAlarmMessageList = new ArrayList<>();
         long startTime = Optional.ofNullable(redisTemplate.opsForValue().get(START_TIME)).orElse(-1L);
@@ -83,7 +88,7 @@ public class ResourceAlarmTask implements ApplicationRunner {
                 if (CollUtil.isNotEmpty(resourceAlarmMessageList)) {
                     log.info("===== 本次产生的告警数量：{} =====", resourceAlarmMessageList.size());
                     resourceAlarmMessageService.generatedAlarmList(resourceAlarmMessageList);
-                    log.info("===== 统计资源信息完成，时间：{} =====", DateUtil.now());
+                    log.info("===== 统计资源信息完成，耗时：{}ms =====", (System.currentTimeMillis() - start));
                 }
                 return null;
             });
@@ -97,7 +102,6 @@ public class ResourceAlarmTask implements ApplicationRunner {
         long diffTime = -1L == startTime ? 10000 : curTime - startTime;
         MetricsQueryRange metricsQueryRange = getMetricsQueryRange(resourceAlarmRule, curTime, timeDuration);
         try {
-            log.info("===== 指标：{}，diffTime：{}ms，timeDuration：{}ms =====", resourceAlarmRule.getResourceEnum(), diffTime, timeDuration);
             if (diffTime >= timeDuration) {
                 List<NodeResourceVariationInfo> nodeResourceVariationInfos = resourceMonitorService.queryNodeResourceVariationInfo(metricsQueryRange);
                 if (CollUtil.isNotEmpty(nodeResourceVariationInfos)) {
@@ -140,7 +144,7 @@ public class ResourceAlarmTask implements ApplicationRunner {
         return ResourceAlarmMessage.builder()
                 .message(alarmMsg).resourceEnum(resourceAlarmRule.getResourceEnum())
                 .ruleId(resourceAlarmRule.getId()).tenantId(resourceAlarmRule.getTenantId())
-                .alarmTime(DateUtil.date()).build();
+                .alarmTime(DateUtil.date()).nodeName(nodeName).build();
     }
 
     @Override

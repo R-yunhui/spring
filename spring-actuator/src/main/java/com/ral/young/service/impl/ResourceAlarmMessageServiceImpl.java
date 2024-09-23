@@ -110,48 +110,49 @@ public class ResourceAlarmMessageServiceImpl extends ServiceImpl<ResourceAlarmMe
     @Override
     public void generatedAlarmList(List<ResourceAlarmMessage> resourceAlarmMessageList) {
         // 同一天针对同一个租户和同一种类型的告警只允许产生一种告警，有新的就更新告警的时间和告警消息
-        List<Long> tenantIdList = resourceAlarmMessageList.stream().map(ResourceAlarmMessage::getTenantId).collect(Collectors.toList());
-        long start = DateUtil.date().getTime();
-        long end = DateUtil.endOfDay(DateUtil.date()).getTime();
-        List<ResourceAlarmMessage> dbResourceAlarmMessages = resourceAlarmMessageMapper.selectList(new LambdaQueryWrapper<ResourceAlarmMessage>()
-                .in(ResourceAlarmMessage::getTenantId, tenantIdList)
-                .between(ResourceAlarmMessage::getAlarmTime, start, end)
-        );
+        try {
+            List<Long> tenantIdList = resourceAlarmMessageList.stream().map(ResourceAlarmMessage::getTenantId).collect(Collectors.toList());
+            List<ResourceAlarmMessage> dbResourceAlarmMessages = resourceAlarmMessageMapper.selectList(new LambdaQueryWrapper<ResourceAlarmMessage>()
+                    .in(ResourceAlarmMessage::getTenantId, tenantIdList)
+                    .between(ResourceAlarmMessage::getAlarmTime, DateUtil.beginOfDay(DateUtil.date()), DateUtil.endOfDay(DateUtil.date()))
+            );
 
-        if (CollUtil.isNotEmpty(dbResourceAlarmMessages)) {
-            List<ResourceAlarmMessage> addAlarmMsgList = new ArrayList<>();
-            List<ResourceAlarmMessage> updateAlarmMsgList = new ArrayList<>();
+            if (CollUtil.isNotEmpty(dbResourceAlarmMessages)) {
+                List<ResourceAlarmMessage> addAlarmMsgList = new ArrayList<>();
+                List<ResourceAlarmMessage> updateAlarmMsgList = new ArrayList<>();
 
-            Map<String, ResourceAlarmMessage> dbResourceAlarmMessageMap = dbResourceAlarmMessages.stream().collect(Collectors.toMap(o -> o.getResourceEnum().name() + "::" + o.getTenantId(), o -> o));
-            for (ResourceAlarmMessage resourceAlarmMessage : resourceAlarmMessageList) {
-                ResourceEnum resourceEnum = resourceAlarmMessage.getResourceEnum();
-                Long tenantId = resourceAlarmMessage.getTenantId();
-                String key = resourceEnum.name() + "::" + tenantId;
-                ResourceAlarmMessage dbAlarmMessage = dbResourceAlarmMessageMap.get(key);
-                // 找到该租户和该类型对应的告警
-                if (ObjectUtil.isNotNull(dbAlarmMessage)) {
-                    // 进行更新即可
-                    dbAlarmMessage.setMessage(resourceAlarmMessage.getMessage());
-                    dbAlarmMessage.setAlarmTime(resourceAlarmMessage.getAlarmTime());
-                    updateAlarmMsgList.add(dbAlarmMessage);
-                } else {
-                    // 如果是第一次看到该类型，则直接添加
-                    addAlarmMsgList.add(resourceAlarmMessage);
+                Map<String, ResourceAlarmMessage> dbResourceAlarmMessageMap = dbResourceAlarmMessages.stream().collect(Collectors.toMap(o -> o.getResourceEnum().name() + "::" + o.getTenantId() + "::" + o.getNodeName(), o -> o));
+                for (ResourceAlarmMessage resourceAlarmMessage : resourceAlarmMessageList) {
+                    ResourceEnum resourceEnum = resourceAlarmMessage.getResourceEnum();
+                    Long tenantId = resourceAlarmMessage.getTenantId();
+                    String key = resourceEnum.name() + "::" + tenantId + "::" + resourceAlarmMessage.getNodeName();
+                    ResourceAlarmMessage dbAlarmMessage = dbResourceAlarmMessageMap.get(key);
+                    // 找到该租户和该类型对应的告警
+                    if (ObjectUtil.isNotNull(dbAlarmMessage)) {
+                        // 进行更新即可
+                        dbAlarmMessage.setMessage(resourceAlarmMessage.getMessage());
+                        dbAlarmMessage.setAlarmTime(resourceAlarmMessage.getAlarmTime());
+                        updateAlarmMsgList.add(dbAlarmMessage);
+                    } else {
+                        // 如果是第一次看到该类型，则直接添加
+                        addAlarmMsgList.add(resourceAlarmMessage);
+                    }
                 }
+
+                // 分别进行更新和新增即可
+                if (CollUtil.isNotEmpty(addAlarmMsgList)) {
+                    resourceAlarmMessageService.saveBatch(resourceAlarmMessageList);
+                }
+
+                if (CollUtil.isNotEmpty(updateAlarmMsgList)) {
+                    resourceAlarmMessageService.updateBatchById(updateAlarmMsgList);
+                }
+                return;
             }
 
-            // 分别进行更新和新增即可
-            if (CollUtil.isNotEmpty(addAlarmMsgList)) {
-                resourceAlarmMessageService.saveBatch(resourceAlarmMessageList);
-            }
-
-            if (CollUtil.isNotEmpty(updateAlarmMsgList)) {
-                resourceAlarmMessageService.updateBatchById(updateAlarmMsgList);
-            }
-
-            return;
+            resourceAlarmMessageService.saveBatch(resourceAlarmMessageList);
+        } catch (Exception e) {
+            log.error("产生资源告警信息异常，", e);
         }
-
-        resourceAlarmMessageService.saveBatch(resourceAlarmMessageList);
     }
 }

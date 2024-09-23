@@ -40,6 +40,12 @@ public class ResourceAlarmMessage {
     private ResourceEnum resourceEnum;
 
     /**
+     * 节点名称
+     */
+    @TableField(value = "node_name")
+    private String nodeName;
+
+    /**
      * 删除标志 正常：0  删除：1
      */
     @TableField(value = "delete_flag")
