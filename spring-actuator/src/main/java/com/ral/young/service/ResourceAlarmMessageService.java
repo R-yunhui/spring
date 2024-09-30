@@ -23,41 +23,20 @@ public interface ResourceAlarmMessageService extends IService<ResourceAlarmMessa
     List<ResourceAlarmMessageVO> queryResourceAlarmMessage();
 
     /**
-     * 根据租户id和开始结束时间查询告警信息
-     *
-     * @param tenantId 租户id
-     * @param start    开始时间
-     * @param end      结束时间
-     * @return 告警信息
-     */
-    List<ResourceAlarmMessage> queryResourceAlarmMessageByTenantId(Long tenantId, Long start, Long end);
-
-    /**
      * 删除资源告警信息
      *
-     * @param ids 资源告警信息id
-     * @return 是否删除成功
+     * @param idsDTO 资源告警信息id
      */
-    Boolean deleteResourceAlarmMessage(List<Long> ids);
+    void deleteResourceAlarmMessage(IdsDTO idsDTO);
 
     /**
-     * 产生资源告警信息
+     * 产生授权资源告警信息（平台授权以及租户授权）
      *
      * @param resourceEnum 资源枚举
-     * @param tenantId     租户id
-     * @param ruleId       规则id
-     * @param threshold    阈值
+     * @param tenantId 租户id
+     * @param alarm 是否告警 0 - 告警  1 - 正常
      */
-    void createResourceAlarmMessage(ResourceEnum resourceEnum, Long tenantId, Long ruleId, Double threshold);
-
-    /**
-     * 产生资源告警信息
-     *
-     * @param resourceEnum 资源枚举
-     * @param tenantId     租户id
-     * @param ruleId       规则id
-     */
-    void createResourceAlarmMessage(ResourceEnum resourceEnum, Long tenantId, Long ruleId);
+    void createAuthResourceAlarmMessage(ResourceEnum resourceEnum, Long tenantId, Byte alarm);
 
     /**
      * 产生告警信息

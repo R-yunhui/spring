@@ -1,5 +1,6 @@
 package com.ral.young.service;
 
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.web.socket.WebSocketSession;
 
 /**
@@ -8,7 +9,7 @@ import org.springframework.web.socket.WebSocketSession;
  * @date 2024-09-20 15-01-10
  * @since 1.0.0
  */
-public interface WebSocketService {
+public interface WebSocketService extends MessageListener {
 
     /**
      * 处理建立连接
@@ -33,11 +34,4 @@ public interface WebSocketService {
      * @param message   消息
      */
     void sendMessage(String sessionId, String message);
-
-    /**
-     * 广播消息，对所有建立了 websocket连接的客户端发送消息
-     *
-     * @param message 消息
-     */
-    void broadcastMessage(String message);
 }

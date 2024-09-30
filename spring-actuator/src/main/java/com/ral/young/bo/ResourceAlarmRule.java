@@ -39,6 +39,12 @@ public class ResourceAlarmRule {
     private Long tenantId;
 
     /**
+     * 用户id
+     */
+    @TableField(value = "user_id")
+    private Long userId;
+
+    /**
      * 采集时长
      */
     @TableField(value = "time_duration")

@@ -14,12 +14,13 @@ import javax.annotation.Resource;
 @Component
 public class WsMessageBroadcaster {
 
+
     @Resource
     private RedisTemplate<String, String> redisTemplate;
 
     public static final String BROADCAST_CHANNEL = "broadcast-channel";
 
-    public void broadcast(String message) {
-        redisTemplate.convertAndSend(BROADCAST_CHANNEL, message);
+    public void broadcast(Object o) {
+        redisTemplate.convertAndSend(BROADCAST_CHANNEL, o);
     }
 }

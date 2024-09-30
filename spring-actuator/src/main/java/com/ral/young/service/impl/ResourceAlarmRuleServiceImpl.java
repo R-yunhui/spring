@@ -36,14 +36,20 @@ public class ResourceAlarmRuleServiceImpl extends ServiceImpl<ResourceAlarmRuleM
 
     @Override
     public void saveOrUpdateResourceAlarmRule(List<ResourceAlarmRuleVO> resourceAlarmRuleVOS) {
+        UserDTO userInfo = UserUtils.getCurrentUserInfo();
         // 每个租户针对不同资源的告警规则只能设置一种
-        List<ResourceAlarmRule> dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class).eq(ResourceAlarmRule::getTenantId, 0L));
+        List<ResourceAlarmRule> dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class)
+                .eq(ResourceAlarmRule::getTenantId, userInfo.getTenantId())
+                .eq(ResourceAlarmRule::getUserId, userInfo.getId())
+                .eq(ResourceAlarmRule::getDeleteFlag, ResourceAlarmConstants.NOT_DELETE)
+        );
         if (CollUtil.isNotEmpty(dbResourceAlarmRule)) {
             Map<ResourceEnum, ResourceAlarmRuleVO> alarmRuleMap = resourceAlarmRuleVOS.stream().collect(Collectors.toMap(ResourceAlarmRuleVO::getResourceEnum, resourceAlarmRule -> resourceAlarmRule));
             for (ResourceAlarmRule resourceAlarmRule : dbResourceAlarmRule) {
                 ResourceAlarmRuleVO resourceAlarmRuleVO = alarmRuleMap.get(resourceAlarmRule.getResourceEnum());
                 if (resourceAlarmRuleVO != null) {
                     resourceAlarmRule.setThreshold(resourceAlarmRuleVO.getThreshold());
+                    resourceAlarmRule.setUserId(userInfo.getId());
                     resourceAlarmRule.setTimeDuration(resourceAlarmRuleVO.getTimeDuration());
                 }
             }
@@ -52,8 +58,9 @@ public class ResourceAlarmRuleServiceImpl extends ServiceImpl<ResourceAlarmRuleM
             List<ResourceAlarmRule> resourceAlarmRules = new ArrayList<>();
             for (ResourceAlarmRuleVO resourceAlarmRuleVO : resourceAlarmRuleVOS) {
                 ResourceAlarmRule resourceAlarmRule = BeanUtil.copyProperties(resourceAlarmRuleVO, ResourceAlarmRule.class);
-                resourceAlarmRule.setDeleteFlag((byte) 0);
-                resourceAlarmRule.setTenantId(0L);
+                resourceAlarmRule.setDeleteFlag(ResourceAlarmConstants.NOT_DELETE);
+                resourceAlarmRule.setUserId(userInfo.getId());
+                resourceAlarmRule.setTenantId(userInfo.getTenantId());
                 resourceAlarmRules.add(resourceAlarmRule);
             }
             resourceAlarmRuleService.saveBatch(resourceAlarmRules);
@@ -62,12 +69,14 @@ public class ResourceAlarmRuleServiceImpl extends ServiceImpl<ResourceAlarmRuleM
 
     @Override
     public List<ResourceAlarmRuleVO> queryResourceAlarmRule() {
-        Long tenantId = 0L;
-        // 每个租户针对不同资源的告警规则只能设置一种
-        List<ResourceAlarmRule> dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class).eq(ResourceAlarmRule::getTenantId, tenantId));
+        // 每个用户针对不同资源的告警规则只能设置一种
+        List<ResourceAlarmRule> dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class)
+                .eq(ResourceAlarmRule::getUserId, UserUtils.getCurrentUserInfo().getId())
+                .eq(ResourceAlarmRule::getDeleteFlag, ResourceAlarmConstants.NOT_DELETE)
+        );
         if (CollUtil.isEmpty(dbResourceAlarmRule)) {
-            // 如果一开始该租户没有设置告警规则，则使用默认告警规则
-            dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class).eq(ResourceAlarmRule::getTenantId, -1L));
+            // 如果一开始没有设置告警规则，则使用默认告警规则
+            dbResourceAlarmRule = resourceAlarmRuleMapper.selectList(new LambdaQueryWrapper<>(ResourceAlarmRule.class).eq(ResourceAlarmRule::getUserId, ResourceAlarmConstants.DEFAULT_USER_ID));
         }
         return dbResourceAlarmRule.stream().map(resourceAlarmRule -> BeanUtil.copyProperties(resourceAlarmRule, ResourceAlarmRuleVO.class)).collect(Collectors.toList());
     }

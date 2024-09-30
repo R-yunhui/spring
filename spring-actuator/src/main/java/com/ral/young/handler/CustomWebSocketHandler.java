@@ -28,13 +28,18 @@ public class CustomWebSocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession webSocketSession) throws Exception {
         // 连接建立之后
-        Object id = webSocketSession.getAttributes().get("id");
-        if (Objects.isNull(id)) {
+        UserDTO userInfo = new UserDTO();
+        userInfo.setId(1564154524797288449L);
+        userInfo.setTenantId(1717116021497991169L);
+        // UserUtils.getCurrentUserInfo();
+        if (Objects.isNull(userInfo)) {
             log.warn("连接【{}】未携带标识参数，不进行连接建立", webSocketSession.getUri());
             return;
         }
 
-        webSocketService.handlerEstablishConnection(id.toString(), webSocketSession);
+        // sessionId：tenantId::userId
+        String sessionId = userInfo.getTenantId() + "::" + userInfo.getId();
+        webSocketService.handlerEstablishConnection(sessionId, webSocketSession);
     }
 
     @Override

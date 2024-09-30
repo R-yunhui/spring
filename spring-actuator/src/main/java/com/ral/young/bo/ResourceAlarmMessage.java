@@ -58,6 +58,12 @@ public class ResourceAlarmMessage {
     private Long tenantId;
 
     /**
+     * 用户id
+     */
+    @TableField(value = "user_id")
+    private Long userId;
+
+    /**
      * 所属规则 id
      */
     @TableField(value = "rule_id")
@@ -67,7 +73,21 @@ public class ResourceAlarmMessage {
      * 告警时间
      */
     @TableField(value = "alarm_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date alarmTime;
+
+    /**
+     * 告警恢复时间
+     */
+    @TableField(value = "resume_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date resumeTime;
+
+    /**
+     * 告警状态（0 - 告警  1 - 已恢复）
+     */
+    @TableField(value = "alarm_status")
+    private Byte alarmStatus;
 
     /**
      * 创建时间
