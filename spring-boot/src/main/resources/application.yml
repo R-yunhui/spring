@@ -3,8 +3,11 @@ spring:
     image:
       location: banner.txt
 
+server:
+  port: 8090
+
 scheduled:
-  fixedRateTime: 20000
+  fixedRateTime: 180000
   initialDelayTimeOne: 20000
   initialDelayTimeTwo: 25000
   initialDelayTimeThree: 30000

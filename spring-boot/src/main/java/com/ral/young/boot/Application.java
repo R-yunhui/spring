@@ -4,6 +4,7 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -14,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  */
 @SpringBootApplication
-// @EnableScheduling
+@EnableScheduling
 public class Application {
 
     public static void main(String[] args) {
