@@ -36,6 +36,7 @@
         <module>spring-service</module>
         <module>spring-actuator</module>
         <module>spring-demo</module>
+        <module>spring-docker</module>
     </modules>
 
     <parent>
