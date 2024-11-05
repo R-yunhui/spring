@@ -2,11 +2,16 @@ package com.ral.young.basic.spring.controller;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.ral.young.basic.snapshot.SnapShotService;
+import com.ral.young.basic.snapshot.SnapshotVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -22,6 +27,15 @@ import java.util.Map;
 @RestController
 @RequestMapping(value = "/web")
 public class WebController {
+
+    @Resource
+    private SnapShotService service;
+
+    @PostMapping(value = "/create")
+    public String create(@RequestBody SnapshotVO snapshotVO) {
+        service.test(snapshotVO.getRtspUrl());
+        return "success";
+    }
 
     @GetMapping(value = "/test/{num}")
     public void test(@PathVariable(value = "num") int num) {

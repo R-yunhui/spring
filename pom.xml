@@ -37,6 +37,7 @@
         <module>spring-actuator</module>
         <module>spring-demo</module>
         <module>spring-docker</module>
+        <module>spring-ftp</module>
     </modules>
 
     <parent>

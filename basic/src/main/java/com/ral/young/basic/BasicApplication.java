@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @date 2023-06-02 10:04
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.ral.young.basic.spring"})
+@SpringBootApplication(scanBasePackages = {"com.ral.young.basic.spring", "com.ral.young.basic.snapshot"})
 public class BasicApplication {
 
     public static void main(String[] args) {
