@@ -17,7 +17,7 @@ public interface AnalysisService {
 
     BigModelAnalysisVO executeBigModel(BigModelQueryVO modelQueryVO);
 
-    CVModelResultVO executeCVModel();
+    CVModelResultVO executeCVModel(String base64);
 
     void analyze(AnalysisQueryVO analysisQueryVO);
 

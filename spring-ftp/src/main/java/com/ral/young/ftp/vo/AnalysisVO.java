@@ -20,73 +20,57 @@ import java.util.List;
 @Builder
 public class AnalysisVO {
 
-    @JsonProperty("code")
-    private String code;
-
-    @JsonProperty("msg")
-    private String msg;
-
-    @JsonProperty("data")
-    private DataDTO data;
+    @JsonProperty("users")
+    private List<UsersDTO> users;
 
     @NoArgsConstructor
     @Data
     @AllArgsConstructor
     @Builder
-    public static class DataDTO {
+    public static class UsersDTO {
 
-        @JsonProperty("users")
-        private List<UsersDTO> users;
+        @JsonProperty("id")
+        private Long id;
+
+        @JsonProperty("boxes")
+        private List<BoxesDTO> boxes;
+
+        @JsonProperty("content")
+        private String content;
+
+        @JsonProperty("labels")
+        private List<LabelsDTO> labels;
 
         @NoArgsConstructor
         @Data
         @AllArgsConstructor
         @Builder
-        public static class UsersDTO {
+        public static class BoxesDTO {
 
-            @JsonProperty("id")
-            private Long id;
+            @JsonProperty("height")
+            private Integer height;
 
-            @JsonProperty("boxes")
-            private List<BoxesDTO> boxes;
+            @JsonProperty("width")
+            private Integer width;
 
-            @JsonProperty("content")
-            private String content;
+            @JsonProperty("x")
+            private Integer x;
 
-            @JsonProperty("labels")
-            private List<LabelsDTO> labels;
+            @JsonProperty("y")
+            private Integer y;
+        }
 
-            @NoArgsConstructor
-            @Data
-            @AllArgsConstructor
-            @Builder
-            public static class BoxesDTO {
+        @NoArgsConstructor
+        @Data
+        @AllArgsConstructor
+        @Builder
+        public static class LabelsDTO {
 
-                @JsonProperty("height")
-                private Integer height;
+            @JsonProperty("labelName")
+            private String labelName;
 
-                @JsonProperty("width")
-                private Integer width;
-
-                @JsonProperty("x")
-                private Integer x;
-
-                @JsonProperty("y")
-                private Integer y;
-            }
-
-            @NoArgsConstructor
-            @Data
-            @AllArgsConstructor
-            @Builder
-            public static class LabelsDTO {
-
-                @JsonProperty("labelName")
-                private String labelName;
-
-                @JsonProperty("des")
-                private String des;
-            }
+            @JsonProperty("des")
+            private String des;
         }
     }
 }

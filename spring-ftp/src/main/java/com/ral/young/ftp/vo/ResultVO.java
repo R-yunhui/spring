@@ -14,7 +14,7 @@ import java.io.Serializable;
 @Data
 public class ResultVO<T> implements Serializable {
 
-    private Integer status;
+    private Integer code;
 
     private String message;
 
@@ -27,7 +27,7 @@ public class ResultVO<T> implements Serializable {
      */
     @JsonIgnore
     public boolean isSuccess() {
-        return this.getStatus() == 200;
+        return this.getCode() == 200;
     }
 
     /**
@@ -37,12 +37,12 @@ public class ResultVO<T> implements Serializable {
      */
     @JsonIgnore
     public boolean isFailure() {
-        return this.getStatus() != 200;
+        return this.getCode() != 200;
     }
 
     public static <T> ResultVO<T> success(T data) {
         ResultVO<T> vo = new ResultVO<>();
-        vo.setStatus(200);
+        vo.setCode(200);
         vo.setMessage("success");
         vo.setData(data);
         return vo;
@@ -50,7 +50,7 @@ public class ResultVO<T> implements Serializable {
 
     public static <T> ResultVO<T> failure(Integer status, String message) {
         ResultVO<T> vo = new ResultVO<>();
-        vo.setStatus(status);
+        vo.setCode(status);
         vo.setMessage(message);
         vo.setData(null);
         return vo;
@@ -58,7 +58,7 @@ public class ResultVO<T> implements Serializable {
 
     public static <T> ResultVO<T> failure(Integer status, String message, T data) {
         ResultVO<T> vo = new ResultVO<>();
-        vo.setStatus(status);
+        vo.setCode(status);
         vo.setMessage(message);
         vo.setData(data);
         return vo;
