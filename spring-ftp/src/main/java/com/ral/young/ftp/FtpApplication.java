@@ -3,6 +3,7 @@ package com.ral.young.ftp;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  */
 @SpringBootApplication
+@EnableRetry
 public class FtpApplication {
 
     public static void main(String[] args) {

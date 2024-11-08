@@ -18,11 +18,17 @@ import com.ral.young.ftp.vo.BigModelQueryVO;
 import com.ral.young.ftp.vo.CVModelResultVO;
 import com.ral.young.ftp.vo.ResultVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.support.RetrySynchronizationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -61,54 +67,98 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     public static Map<String, ResultVO<AnalysisVO>> cacheMap = new HashMap<>(8);
 
+    @Value("${tips}")
+    private String text;
+
     @Override
+    @Retryable(
+            value = {Exception.class},  // 发生任何异常都重试
+            maxAttempts = 3,           // 最大重试次数为3（包括第一次请求）
+            backoff = @Backoff(
+                    delay = 3000,          // 初始延迟3000ms
+                    multiplier = 1         // 延迟倍数为1，表示每次等待相同时间
+            )
+    )
     public BigModelAnalysisVO executeBigModel(BigModelQueryVO modelQueryVO) {
+        RetryContext retryContext = RetrySynchronizationManager.getContext();
+        int retryCount = retryContext != null ? retryContext.getRetryCount() : 0;
+        log.info("开始调用大模型接口，当前重试次数：{}", retryCount);
+
         try {
             JSONObject param = JSONUtil.parseObj(modelQueryVO);
             log.info("调用大模型接口请求参数：{}", param);
             ResponseEntity<BigModelAnalysisVO> response = restTemplate.postForEntity(BIG_MODEL_URL, param, BigModelAnalysisVO.class);
+
             if (!response.getStatusCode().is2xxSuccessful()) {
-                log.info("调用大模型接口请求失败");
-                return null;
+                log.error("调用大模型接口请求失败，状态码：{}", response.getStatusCode());
+                throw new RuntimeException("调用大模型接口失败，HTTP状态码：" + response.getStatusCode());
             }
 
             BigModelAnalysisVO body = response.getBody();
+            if (body == null) {
+                throw new RuntimeException("调用大模型接口响应体为空");
+            }
+
             log.info("调用大模型接口返回结果：{}", JSONUtil.toJsonStr(body));
             return body;
         } catch (Exception e) {
-            log.error("调用大模型接口失败：", e);
+            log.error("调用大模型接口第{}次失败：{}", retryCount + 1, e.getMessage());
+            throw e;
         }
-        return null;
     }
 
     @Override
+    @Retryable(
+            value = {Exception.class},  // 发生任何异常都重试
+            maxAttempts = 3,           // 最大重试次数为3（包括第一次请求）
+            backoff = @Backoff(
+                    delay = 3000,          // 初始延迟3000ms
+                    multiplier = 1         // 延迟倍数为1，表示每次等待相同时间
+            )
+    )
     public CVModelResultVO executeCVModel(String base64) {
-        // 创建请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        RetryContext retryContext = RetrySynchronizationManager.getContext();
+        int retryCount = retryContext != null ? retryContext.getRetryCount() : 0;
+        log.info("开始调用CV模型接口，当前重试次数：{}", retryCount);
 
-        // 创建请求体
-        MultiValueMap<String, Object> paramMap = new LinkedMultiValueMap<>();
-        paramMap.add("baseLs", base64);
-        HttpEntity<MultiValueMap<String, Object>> multiValueMapHttpEntity = new HttpEntity<>(paramMap, headers);
         try {
-            ResponseEntity<CVModelResultVO> response = restTemplate.postForEntity(CV_MODEL_URL, multiValueMapHttpEntity, CVModelResultVO.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> paramMap = new LinkedMultiValueMap<>();
+            paramMap.add("baseLs", base64);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(paramMap, headers);
+
+            ResponseEntity<CVModelResultVO> response = restTemplate.postForEntity(CV_MODEL_URL, requestEntity, CVModelResultVO.class);
+
             if (!response.getStatusCode().is2xxSuccessful()) {
-                log.info("调用CV模型接口请求失败");
-                return null;
+                log.error("调用CV模型接口请求失败，状态码：{}", response.getStatusCode());
+                throw new RuntimeException("调用CV模型接口失败，HTTP状态码：" + response.getStatusCode());
             }
 
             CVModelResultVO body = response.getBody();
-            if (null == body || body.getStatus() != HttpStatus.OK.value()) {
-                log.error("调用 CV 模型接口异常，返回结果：{}", body);
-                return null;
+            if (body == null || body.getStatus() != HttpStatus.OK.value()) {
+                log.error("调用CV模型接口异常，返回结果：{}", body);
+                throw new RuntimeException("CV模型返回结果异常");
             }
 
             log.info("调用CV模型接口返回结果：{}", JSONUtil.toJsonStr(body));
             return body;
         } catch (Exception e) {
-            log.error("调用CV模型接口失败：", e);
+            log.error("调用CV模型接口第{}次失败：{}", retryCount + 1, e.getMessage());
+            throw e;
         }
+    }
+
+    @Recover
+    public BigModelAnalysisVO recoverBigModel(Exception e, BigModelQueryVO modelQueryVO) {
+        log.error("调用大模型接口重试{}次后仍然失败，最终错误：{}", 3, e.getMessage());
+        return null;
+    }
+
+    @Recover
+    public CVModelResultVO recoverCVModel(Exception e, String base64) {
+        log.error("调用CV模型接口重试{}次后仍然失败，最终错误：{}", 3, e.getMessage());
         return null;
     }
 
@@ -131,7 +181,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                 StringBuilder labels = buildLabels(dataList);
 
                 // 3.根据 cv 模型返回的结果 调用 大模型的接口
-                String text = "提示词：##任务：依据所附带的人物照片，人物的标签，指定的输出要求，按照图片红框框出来的人物信息的红色数字编号信息，分别归纳出一句对人物的祝福话语，需体现积极、正面且具有褒义的特点 ##限制：禁止输出含有负面意义的表达 ##人物标签：%s  ##输出要求：按照编号顺序分别输出即可，不要包含其它多余的信息以及特殊字符，按照中文结果输出";
                 String format = String.format(text, labels);
                 stopWatch.stop();
 
