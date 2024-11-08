@@ -2,11 +2,15 @@ package com.ral.young.ftp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.ral.young.ftp.entity.BodyLabelEntity;
+import com.ral.young.ftp.entity.FaceLabelEntity;
 import com.ral.young.ftp.service.AnalysisService;
+import com.ral.young.ftp.service.LabelService;
 import com.ral.young.ftp.vo.AnalysisQueryVO;
 import com.ral.young.ftp.vo.AnalysisVO;
 import com.ral.young.ftp.vo.BigModelAnalysisVO;
@@ -33,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -47,6 +52,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     @Resource
     private RestTemplate restTemplate;
+    @Resource
+    private LabelService labelService;
 
     public static final String BIG_MODEL_URL = "http://192.168.2.57:23003/v1/chat/completions";
 
@@ -109,6 +116,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     public void analyze(AnalysisQueryVO analysisQueryVO) {
         CompletableFuture.runAsync(() -> {
             try {
+                StopWatch stopWatch = new StopWatch("模型分析任务");
+                stopWatch.start("调用CV模型算法接口");
                 String base64Image = analysisQueryVO.getImgBase64();
 
                 // 调用 CV 模型
@@ -118,17 +127,25 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
 
                 List<CVModelResultVO.DataDTO> dataList = cvModelResultVO.getData();
+
                 StringBuilder labels = buildLabels(dataList);
 
                 // 3.根据 cv 模型返回的结果 调用 大模型的接口
-                String text = "提示词：##任务：依据所附带的人物照片，人物标签，输出要求，按照图片红框框出来的人物信息的红色数字编号信息，分别归纳出一句对人物的祝福话语，需体现积极、正面且具有褒义的特点 ##限制：禁止输出含有负面意义的表达 ##人物标签：%s  ##输出要求：按照顺序分别输出，不要包含特殊字符，按照中文结果输出";
+                String text = "提示词：##任务：依据所附带的人物照片，人物的标签，指定的输出要求，按照图片红框框出来的人物信息的红色数字编号信息，分别归纳出一句对人物的祝福话语，需体现积极、正面且具有褒义的特点 ##限制：禁止输出含有负面意义的表达 ##人物标签：%s  ##输出要求：按照编号顺序分别输出即可，不要包含其它多余的信息以及特殊字符，按照中文结果输出";
                 String format = String.format(text, labels);
+                stopWatch.stop();
+
+                stopWatch.start("调用大模型算法接口");
                 BigModelQueryVO modelQueryVO = init(format, base64Image);
                 BigModelAnalysisVO bigModelAnalysisVO = executeBigModel(modelQueryVO);
+                stopWatch.stop();
 
                 // 4.组装数据
+                stopWatch.start("组装最终的返回结果");
                 AnalysisVO analysisVO = buildResult(analysisQueryVO, bigModelAnalysisVO, dataList);
                 cacheMap.put(analysisQueryVO.getImgName(), ResultVO.success(analysisVO));
+                stopWatch.stop();
+                log.info("执行模型分析任务完成，耗时：{}", stopWatch.prettyPrint(TimeUnit.MILLISECONDS));
             } catch (Exception e) {
                 log.error("执行模型分析任务失败：", e);
                 cacheMap.put(analysisQueryVO.getImgName(), buildError());
@@ -197,23 +214,81 @@ public class AnalysisServiceImpl implements AnalysisService {
         alllist.addAll(bodyPropsDTOList);
         alllist.addAll(facePropsDTOList);
         // 取人体 + 人脸 置信度 > 0.5 的标签
-        alllist = alllist.stream().filter(o -> o.getConfidence() > 0.5).sorted(Comparator.comparing(CVModelResultVO.DataDTO.PropsDTO::getConfidence).reversed()).collect(Collectors.toList());
+        alllist = alllist.stream().filter(o -> o.getConfidence() > 0.5 && !StrUtil.equals("unknown", o.getLabel()))
+                .sorted(Comparator.comparing(CVModelResultVO.DataDTO.PropsDTO::getConfidence).reversed())
+                .collect(Collectors.toList());
         return alllist;
     }
 
-    private static StringBuilder buildLabels(List<CVModelResultVO.DataDTO> dataList) {
+    private StringBuilder buildLabels(List<CVModelResultVO.DataDTO> dataList) {
         StringBuilder builder = new StringBuilder();
         if (CollUtil.isNotEmpty(dataList)) {
             for (int i = 0; i < dataList.size(); i++) {
-                // 设置标签
+                builder.append("第").append(i).append("号人物：");
+
+                // 获取并过滤人脸和人体标签
                 List<CVModelResultVO.DataDTO.PropsDTO> bodyPropsDTOList = dataList.get(i).getBody().getProps();
                 List<CVModelResultVO.DataDTO.PropsDTO> facePropsDTOList = dataList.get(i).getFace().getProps();
-                List<CVModelResultVO.DataDTO.PropsDTO> alllist = getPropsDTOS(bodyPropsDTOList, facePropsDTOList);
 
-                // 组装标签信息
-                String label = alllist.stream().map(CVModelResultVO.DataDTO.PropsDTO::getLabel).collect(Collectors.joining(","));
-                builder.append(i).append("号人物").append("：");
-                builder.append(label).append("  ");
+                // 处理人脸标签
+                if (CollUtil.isNotEmpty(facePropsDTOList)) {
+                    builder.append("人脸标签：");
+                    StringBuilder faceBuilder = new StringBuilder();
+                    for (int faceIndex = 0; faceIndex < facePropsDTOList.size(); faceIndex++) {
+                        // 在这里进行过滤 unknown
+                        CVModelResultVO.DataDTO.PropsDTO faceProp = facePropsDTOList.get(faceIndex);
+                        if (StrUtil.equals("unknown", faceProp.getLabel()) || faceProp.getConfidence() < 0.5) {
+                            continue;
+                        }
+
+                        int idx = faceIndex + 1;
+                        FaceLabelEntity labelResult = labelService.findFaceLabelByIndex(idx);
+                        if (null == labelResult) {
+                            log.warn("获取不到具体的人脸标签信息，index：{}", idx);
+                            continue;
+                        }
+
+                        if (faceBuilder.length() > 0) {
+                            faceBuilder.append("，");
+                        }
+                        faceBuilder.append(labelResult.getChineseName());
+                    }
+                    builder.append(faceBuilder);
+                }
+
+                // 处理人体标签
+                if (CollUtil.isNotEmpty(bodyPropsDTOList)) {
+                    builder.append("。人体标签：");
+                    StringBuilder bodyBuilder = new StringBuilder();
+                    for (int bodyIndex = 0; bodyIndex < bodyPropsDTOList.size(); bodyIndex++) {
+                        CVModelResultVO.DataDTO.PropsDTO bodyProp = bodyPropsDTOList.get(bodyIndex);
+                        if (StrUtil.equals("unknown", bodyProp.getLabel()) || bodyProp.getConfidence() < 0.5) {
+                            continue;
+                        }
+
+                        // bodyIndex + 1 对应 parentIndex (1-5)
+                        int idx = bodyIndex + 1;
+                        BodyLabelEntity labelResult = labelService.findBodyLabelByParentIndexAndEnglishName(
+                                idx,
+                                bodyProp.getLabel()
+                        );
+
+                        if (null == labelResult) {
+                            log.warn("获取不到具体的人体标签信息，index：{}，label：{}", idx, bodyProp.getLabel());
+                            continue;
+                        }
+
+                        if (bodyBuilder.length() > 0) {
+                            bodyBuilder.append("，");
+                        }
+
+                        bodyBuilder.append(labelResult.getCategory())
+                                .append("-")
+                                .append(labelResult.getChineseName());
+                    }
+                    builder.append(bodyBuilder);
+                }
+                builder.append(" ");
             }
         }
         return builder;

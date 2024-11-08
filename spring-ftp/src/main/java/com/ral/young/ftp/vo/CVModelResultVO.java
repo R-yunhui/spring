@@ -112,6 +112,9 @@ public class CVModelResultVO {
 
             @JsonProperty("confidence")
             private Double confidence;
+
+            @JsonProperty("cls")
+            private Integer cls;
         }
     }
 }

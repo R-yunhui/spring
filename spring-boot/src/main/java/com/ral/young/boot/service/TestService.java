@@ -10,7 +10,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,7 +32,7 @@ public class TestService implements ApplicationRunner {
 
     private boolean taskFourEnable = true;
 
-    private String token = "hXvDT4opshAK0WV6B-bA1pQr5KFRopuI6U0n4G9I";
+    private String token = "G2E6Mg8GfMVoxRm0kOPtCkoC0YSePN1N0gK7jVTG";
 
     @Resource
     private RestTemplate restTemplate;
@@ -48,12 +47,13 @@ public class TestService implements ApplicationRunner {
 
     private static final String STATUS = "status";
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeOne}")
+    // @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeOne}")
     public void testSendAlarmDataOne() {
         if (taskOneEnable) {
             try {
                 // String data = "{\"ts\":1723514795220,\"tags\":{\"presetId\":\"-1\",\"severity\":\"\\\"GENERAL\\\"\",\"twiceEnlargeNumber\":\"2.0\",\"twiceReviewInterval\":\"30.0\",\"twiceRecognizeThreshold\":\"60.0\"},\"zoom\":2,\"boxes\":[{\"x\":838,\"y\":369,\"width\":194,\"height\":638},{\"x\":1006,\"y\":453,\"width\":217,\"height\":81}],\"scene\":\"/group1/alarm/20240808/15/54/8/bcd48589408b89a0d87fc704a23086dd.png?download=0\",\"score\":0.326904296875,\"taskId\":\"1777612807331780001\",\"channel\":{\"height\":5.0,\"eastPan\":0.0,\"orgCode\":\"1774690368726835201_1777186040751124482\",\"latitude\":30.63238635,\"northPan\":0.0,\"tenantId\":1774690367569207297,\"longitude\":104.1804775,\"pitchAngle\":0.0,\"channelName\":\"不按规定车道行驶测试设备_0\",\"xCoordinate\":0.0,\"yCoordinate\":0.0,\"zCoordinate\":0.0,\"dueNorthAngle\":0.0,\"verticalFieldOfView\":0.0,\"horizontalFieldOfView\":0.0},\"eventID\":\"5267cb94f64a11eea43ba62fef743ab6\",\"cameraId\":\"1823268253452546049\",\"alarmType\":\"buanguidaochedao\",\"taskParam\":{\"presetId\":\"-1\",\"severity\":\"\\\"GENERAL\\\"\",\"twiceEnlargeNumber\":\"2.0\",\"twiceReviewInterval\":\"30.0\",\"twiceRecognizeThreshold\":\"60.0\"},\"normalType\":false,\"sceneWidth\":1920,\"sceneHeight\":1080,\"abilityParams\":{\"id\":\"bc8ee1820e852d0b3831bd280bbd1b97\",\"minBox\":{\"width\":25,\"height\":25},\"interval\":2,\"minTarry\":30,\"areaBoxes\":[],\"threshold\":0.25,\"mergeEnable\":false,\"objMinCount\":1,\"periodTimes\":[{\"endTime\":\"09:00:00\",\"startTime\":\"18:00:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"alarmInterval\":60},\"alarmVideoStop\":1563368095747,\"alarmVideoStart\":256,\"twiceEnlargeNumber\":\"2.0\",\"twiceRecognizeThreshold\":\"60.0\"}";
-                String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1843573406130229250\",\"tenantId\":\"1843573405983428610\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20241010/16/54/3/buanguidingchedaoxingshi3\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WorkingWithHelmetAndHook\",\"cameraId\":\"1843826205918191617\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1843838295293882369\"},\"ability\":\"不按规定车道行驶\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
+                // String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1843573406130229250\",\"tenantId\":\"1843573405983428610\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20241010/16/54/3/buanguidingchedaoxingshi3\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WorkingWithHelmetAndHook\",\"cameraId\":\"1843826205918191617\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1843838295293882369\"},\"ability\":\"不按规定车道行驶\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
+                String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1717116029546860545\",\"tenantId\":\"1717116021497991169\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20241107/16/20/7/buanguidingchedaoxingshi\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WithoutHelmetOnSite\",\"cameraId\":\"1854442614118703106\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"DEPTH_LEARN_MODEL\",\"areaBoxes\":[],\"id\":\"1854442450220974081\"},\"ability\":\"未带安全帽检测\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
                 Result result = getResult(data);
 
                 ResponseEntity<JSONObject> response = getResponse(result);
@@ -88,7 +88,7 @@ public class TestService implements ApplicationRunner {
         }
     }
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeTwo}")
+    // @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeTwo}")
     public void testSendAlarmDataTwo() {
         if (taskTwoEnable) {
             try {
@@ -109,7 +109,7 @@ public class TestService implements ApplicationRunner {
         }
     }
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeThree}")
+    // @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeThree}")
     public void testSendAlarmDataThree() {
         if (taskThreeEnable) {
             try {
@@ -130,7 +130,7 @@ public class TestService implements ApplicationRunner {
         }
     }
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeFour}")
+    // @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeFour}")
     public void testSendAlarmDataFour() {
         if (taskFourEnable) {
             try {
@@ -190,7 +190,8 @@ public class TestService implements ApplicationRunner {
         headers.add("x-auth-token", token);
 
         HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
-        return restTemplate.postForEntity("http://182.140.132.195:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        // return restTemplate.postForEntity("http://182.140.132.195:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        return restTemplate.postForEntity("http://192.168.2.20:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
     }
 
     private static Result getResult(String data) {
@@ -213,6 +214,7 @@ public class TestService implements ApplicationRunner {
 //        testSendAlarmDataTwo();
 //        testSendAlarmDataThree();
 //        testSendAlarmDataFour();
+        testSendAlarmDataOne();
     }
 
     private static class Result {
