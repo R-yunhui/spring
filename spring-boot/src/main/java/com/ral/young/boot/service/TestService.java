@@ -2,7 +2,9 @@ package com.ral.young.boot.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
+import com.ral.young.boot.vo.TestVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -10,7 +12,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,7 +34,9 @@ public class TestService implements ApplicationRunner {
 
     private boolean taskFourEnable = true;
 
-    private String token = "G2E6Mg8GfMVoxRm0kOPtCkoC0YSePN1N0gK7jVTG";
+    private String token = "fVgtQVgDxa8pXttJJnmVwiSKdHXZni6UcE6S5dUZ";
+
+    private String xUser = "{\t\"id\": 1564154524797288449,\t\"isSuperAdmin\": true,\t\"ownerId\": null,\t\"tenantId\": 1717116021497991169,\t\"orgId\": 1717116029546860545,\t\"orgCode\": \"1717116029546860545\",\t\"roleId\": 1718817850385985538}";
 
     @Resource
     private RestTemplate restTemplate;
@@ -48,17 +51,18 @@ public class TestService implements ApplicationRunner {
 
     private static final String STATUS = "status";
 
-    @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeOne}")
-    public void testSendAlarmDataOne() {
+    // @Scheduled(fixedRateString = "${scheduled.fixedRateTime}", initialDelayString = "${scheduled.initialDelayTimeOne}")
+    public void testSendAlarmDataOne(TestVO testVO) {
         if (taskOneEnable) {
             try {
                 // String data = "{\"ts\":1723514795220,\"tags\":{\"presetId\":\"-1\",\"severity\":\"\\\"GENERAL\\\"\",\"twiceEnlargeNumber\":\"2.0\",\"twiceReviewInterval\":\"30.0\",\"twiceRecognizeThreshold\":\"60.0\"},\"zoom\":2,\"boxes\":[{\"x\":838,\"y\":369,\"width\":194,\"height\":638},{\"x\":1006,\"y\":453,\"width\":217,\"height\":81}],\"scene\":\"/group1/alarm/20240808/15/54/8/bcd48589408b89a0d87fc704a23086dd.png?download=0\",\"score\":0.326904296875,\"taskId\":\"1777612807331780001\",\"channel\":{\"height\":5.0,\"eastPan\":0.0,\"orgCode\":\"1774690368726835201_1777186040751124482\",\"latitude\":30.63238635,\"northPan\":0.0,\"tenantId\":1774690367569207297,\"longitude\":104.1804775,\"pitchAngle\":0.0,\"channelName\":\"不按规定车道行驶测试设备_0\",\"xCoordinate\":0.0,\"yCoordinate\":0.0,\"zCoordinate\":0.0,\"dueNorthAngle\":0.0,\"verticalFieldOfView\":0.0,\"horizontalFieldOfView\":0.0},\"eventID\":\"5267cb94f64a11eea43ba62fef743ab6\",\"cameraId\":\"1823268253452546049\",\"alarmType\":\"buanguidaochedao\",\"taskParam\":{\"presetId\":\"-1\",\"severity\":\"\\\"GENERAL\\\"\",\"twiceEnlargeNumber\":\"2.0\",\"twiceReviewInterval\":\"30.0\",\"twiceRecognizeThreshold\":\"60.0\"},\"normalType\":false,\"sceneWidth\":1920,\"sceneHeight\":1080,\"abilityParams\":{\"id\":\"bc8ee1820e852d0b3831bd280bbd1b97\",\"minBox\":{\"width\":25,\"height\":25},\"interval\":2,\"minTarry\":30,\"areaBoxes\":[],\"threshold\":0.25,\"mergeEnable\":false,\"objMinCount\":1,\"periodTimes\":[{\"endTime\":\"09:00:00\",\"startTime\":\"18:00:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"alarmInterval\":60},\"alarmVideoStop\":1563368095747,\"alarmVideoStart\":256,\"twiceEnlargeNumber\":\"2.0\",\"twiceRecognizeThreshold\":\"60.0\"}";
                 // String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1843573406130229250\",\"tenantId\":\"1843573405983428610\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20241010/16/54/3/buanguidingchedaoxingshi3\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WorkingWithHelmetAndHook\",\"cameraId\":\"1843826205918191617\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1843838295293882369\"},\"ability\":\"不按规定车道行驶\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
-                String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1717116029546860545\",\"tenantId\":\"1717116021497991169\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20241107/16/20/7/buanguidingchedaoxingshi\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WithoutHelmetOnSite\",\"cameraId\":\"1854442614118703106\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"DEPTH_LEARN_MODEL\",\"areaBoxes\":[],\"id\":\"1854442450220974081\"},\"ability\":\"未带安全帽检测\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
-                Result result = getResult(data);
+                String data = "{\"boxes\":[{\"x\":772,\"y\":329,\"width\":196,\"height\":635},{\"x\":962,\"y\":410,\"width\":211,\"height\":80}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1717116029546860545\",\"tenantId\":\"1717116021497991169\",\"zCoordinate\":0.0,\"channelName\":\"不按规定车道行驶\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":0.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/default/20241113/18/35/8/buanguidingchedaoxingshi.png\",\"tags\":{\"presetId\":\"-1\",\"severity\":\"GENERAL\"},\"score\":0.83984375,\"alarmType\":\"WithoutHelmetOnSite\",\"cameraId\":\"1854442614118703106\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"09:00\",\"endTime\":\"18:00\"}],\"shieldAreas\":[],\"analysisMode\":\"DEPTH_LEARN_MODEL\",\"areaBoxes\":[],\"id\":\"1854442450220974081\"},\"ability\":\"未带安全帽检测\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
+                Result result = getResult(data, testVO);
 
-                ResponseEntity<JSONObject> response = getResponse(result);
+                ResponseEntity<JSONObject> response = getResponse(result, testVO);
                 JSONObject body = response.getBody();
+                assert body != null;
                 if (SUCCESS_CODE.equals(body.getInt(STATUS))) {
                     log.info("【不按规定车道行驶测试告警数据】 推送成功，发送时间：{}，taskId：{} , eventId：{} ，resp：{}", DateUtil.now(), result.taskId, result.eventId, body);
                 } else {
@@ -72,7 +76,7 @@ public class TestService implements ApplicationRunner {
 
     public void testSendAlarmDataFive() {
         try {
-            for (int i = 0; i < 30; i ++) {
+            for (int i = 0; i < 30; i++) {
                 String data = "{\"boxes\":[{\"height\":42,\"width\":90,\"x\":1066,\"y\":157}],\"eventID\":\"a844c5cc6a7f11ef81d23aff5d25b14d\",\"sceneHeight\":720,\"normalType\":false,\"channel\":{\"eastPan\":0.0,\"latitude\":0.0,\"northPan\":0.0,\"pitchAngle\":0.0,\"xCoordinate\":49.75547791,\"horizontalFieldOfView\":0.0,\"yCoordinate\":49.73924381,\"orgCode\":\"1830585359525699585\",\"tenantId\":\"1830585359127240705\",\"zCoordinate\":0.0,\"channelName\":\"IP PTZ Camera\",\"verticalFieldOfView\":0.0,\"dueNorthAngle\":1.0,\"longitude\":0.0,\"height\":1.0},\"zoom\":0,\"alarmVideoStop\":0,\"scene\":\"/group1/alarm/20240808/15/54/8/bcd48589408b89a0d87fc704a23086dd.png?download=0\",\"score\":0.83984375,\"alarmType\":\"PersonCountSnap\",\"cameraId\":\"1830846804224794626\",\"alarmVideoStart\":\"4737558152524857344\",\"extra\":{\"itemsInBox\":[{\"confidence\":0.83984375,\"type\":\"tanker_side\"}]},\"sceneWidth\":1280,\"alarmEventStatus\":1,\"abilityParams\":{\"periodTimes\":[{\"startTime\":\"00:00\",\"endTime\":\"23:59\"}],\"shieldAreas\":[],\"analysisMode\":\"VIDEO_STREAM\",\"areaBoxes\":[],\"id\":\"1830585653932556291\"},\"ability\":\"人员计数\",\"taskId\":\"1830896934910971906\",\"ts\":\"1725428198823\"}";
                 Result result = getResult(data);
 
@@ -189,10 +193,54 @@ public class TestService implements ApplicationRunner {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("x-auth-token", token);
+        // headers.add("x-user", xUser);
 
         HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
         // return restTemplate.postForEntity("http://182.140.132.195:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
         return restTemplate.postForEntity("http://192.168.2.20:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        // return restTemplate.postForEntity("http://127.0.0.1:8080/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+    }
+
+    private ResponseEntity<JSONObject> getResponse(Result result, TestVO testVO) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // return restTemplate.postForEntity("http://182.140.132.195:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        if (0 == testVO.getLocal()) {
+            if (StrUtil.isNotBlank(testVO.getToken())) {
+                headers.add("x-user", token);
+            }
+            HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
+            return restTemplate.postForEntity("http://127.0.0.1:8080/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+        }
+
+        if (StrUtil.isNotBlank(testVO.getToken())) {
+            headers.add("x-auth-token", token);
+        }
+        HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
+        return restTemplate.postForEntity("http://192.168.2.20:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
+    }
+
+    private static Result getResult(String data, TestVO testVO) {
+        JSONObject jsonObject = new JSONObject(data);
+        String taskId = jsonObject.getStr(TASK_ID);
+        taskId = replaceLastSix(taskId, true, 10);
+        Long timeStamp = DateUtil.current();
+        String eventId = jsonObject.getStr(EVENT_ID);
+        eventId = replaceLastSix(eventId, false, 10);
+
+        jsonObject.replace(TASK_ID, taskId);
+        jsonObject.replace(EVENT_ID, eventId);
+        jsonObject.replace(TS, timeStamp);
+        if (null != testVO) {
+            if (StrUtil.isNotBlank(testVO.getImgUrl())) {
+                jsonObject.replace("scene", testVO.getImgUrl());
+            }
+
+            if (StrUtil.isNotBlank(testVO.getBoxes())) {
+                jsonObject.replace("boxes", testVO.getBoxes());
+            }
+        }
+        return new Result(jsonObject, taskId, eventId);
     }
 
     private static Result getResult(String data) {
@@ -215,7 +263,7 @@ public class TestService implements ApplicationRunner {
 //        testSendAlarmDataTwo();
 //        testSendAlarmDataThree();
 //        testSendAlarmDataFour();
-        testSendAlarmDataOne();
+        //testSendAlarmDataOne("");
     }
 
     private static class Result {
