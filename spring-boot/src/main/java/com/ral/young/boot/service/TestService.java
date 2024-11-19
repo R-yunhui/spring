@@ -214,7 +214,7 @@ public class TestService implements ApplicationRunner {
         }
 
         if (StrUtil.isNotBlank(testVO.getToken())) {
-            headers.add("x-auth-token", token);
+            headers.add("x-auth-token", testVO.getToken());
         }
         HttpEntity<JSONObject> requestEntity = new HttpEntity<>(result.jsonObject, headers);
         return restTemplate.postForEntity("http://192.168.2.20:32800/user-alarm/api/v1/event/receive", requestEntity, JSONObject.class);
