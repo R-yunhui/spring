@@ -61,7 +61,7 @@
         <hutool.version>5.8.3</hutool.version>
         <mysql.version>8.0.21</mysql.version>
         <mybatis-plus.version>3.4.3.4</mybatis-plus.version>
-        <druid.version>1.1.10</druid.version>
+        <druid.version>1.1.21</druid.version>
         <common-collection.version>4.4</common-collection.version>
         <common-lang3.version>3.12.0</common-lang3.version>
         <open-feign.version>11.8</open-feign.version>

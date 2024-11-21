@@ -1,7 +1,9 @@
 package com.ral.young.spring.basic;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * @author renyunhui
@@ -10,6 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 1.0.0
  */
 @SpringBootApplication
+@MapperScan("com.ral.young.spring.basic.mapper")
+@EnableTransactionManagement
 public class BasicApplication {
 
     public static void main(String[] args) {
