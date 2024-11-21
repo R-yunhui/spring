@@ -1,0 +1,75 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /basic
+
+spring:
+  datasource:
+    # 初始化sql 脚本
+    druid:
+      url: jdbc:mysql://101.43.7.180:3306/practice?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+      username: root
+      password: ryh123.0
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      # 初始化物理连接个数
+      initial-size: 5
+      # 最大连接池数量
+      max-active: 20
+      # 最小连接池数量
+      min-idle: 5
+      # 获取连接时最大等待时间(ms)
+      max-wait: 60000
+      # 开启缓存preparedStatement(PSCache) PSCache对支持游标的数据库性能提升巨大,比如oracle - mysql建议管理PSCache
+      pool-prepared-statements: true
+      # 启用PSCache后，指定每个连接上PSCache的大小
+      max-pool-prepared-statement-per-connection-size: 20
+      # 用来检测连接是否有效的sql
+      validation-query: select 'x'
+      # 申请连接时不检测连接是否有效
+      test-on-borrow: false
+      # 归还连接时不检测连接是否有效
+      test-on-return: false
+      # 申请连接时检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效（不影响性能）
+      test-while-idle: true
+      # 检测连接的间隔时间，若连接空闲时间 >= minEvictableIdleTimeMillis，则关闭物理连接
+      time-between-eviction-runs-millis: 60000
+      # 连接保持空闲而不被驱逐的最小时间(ms)
+      min-evictable-idle-time-millis: 300000
+      # 配置监控统计拦截的filters（不配置则监控界面sql无法统计），监控统计filter:stat，日志filter:log4j，防御sql注入filter:wall
+      filters: slf4j
+      # 支持合并多个DruidDataSource的监控数据
+      use-global-data-source-stat: true
+      # 通过connectProperties属性来打开mergeSql(Sql合并)功能；慢SQL记录(配置超过5秒就是慢，默认是3秒)
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1
+
+      stat-view-servlet:
+        # 登录druid监控web界面用户名密码
+        login-username: root
+        login-password: ryh123.0
+        allow: 127.0.0.1
+
+## mybatis-plus 配置
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDelete    # 表中标记为逻辑删除的字段
+      logic-delete-value: 1           # 1 代表删除
+      logic-not-delete-value: 0       # 0 代表未删除
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 sql 语句
+    cache-enabled: true               # 默认开启
+
+mybatis-plus-join:
+  # 是否打印 mybatis plus join banner 默认true
+  banner: true
+  # 全局启用副表逻辑删除(默认true) 关闭后关联查询不会加副表逻辑删除
+  sub-table-logic: true
+  # 拦截器MappedStatement缓存(默认true)
+  ms-cache: true
+  # 表别名(默认 t)
+  table-alias: t
+  # 副表逻辑删除条件的位置，支持where、on
+  # 默认ON （1.4.7.2及之前版本默认为where）
+  logic-del-type: on
+  # 非空判断策略
+  if-exists: not_blank
