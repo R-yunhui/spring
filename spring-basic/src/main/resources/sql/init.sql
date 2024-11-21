@@ -11,7 +11,8 @@ CREATE TABLE `user`
     `update_user` bigint      NOT NULL COMMENT '更新人',
     `is_delete`   tinyint     NOT NULL DEFAULT '0' COMMENT '是否删除：0-未删除，1-已删除',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_email` (`email`)
+    UNIQUE KEY `uk_email` (`email`),
+    KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- 添加version字段 支持乐观锁

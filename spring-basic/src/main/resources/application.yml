@@ -4,6 +4,12 @@ server:
     context-path: /basic
 
 spring:
+  application:
+    name: spring-basic
+  task:
+    scheduling:
+      pool:
+        size: 10  # 定时任务线程池大小
   datasource:
     # 初始化sql 脚本
       url: jdbc:mysql://101.43.7.180:3306/practice?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=convertToNull
@@ -61,3 +67,14 @@ mybatis-plus-join:
   logic-del-type: on
   # 非空判断策略
   if-exists: not_blank
+
+# 监控指标
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: ${spring.application.name}
+

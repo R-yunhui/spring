@@ -3,6 +3,7 @@ package com.ral.young.spring.basic.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ral.young.spring.basic.common.Result;
 import com.ral.young.spring.basic.dto.UserQueryDTO;
+import com.ral.young.spring.basic.metrics.annotation.MetricsMonitor;
 import com.ral.young.spring.basic.service.CustomValidateGroup;
 import com.ral.young.spring.basic.service.UserService;
 import com.ral.young.spring.basic.vo.UserVO;
@@ -78,6 +79,7 @@ public class UserController {
      */
     @ApiOperation(value = "获取用户信息", notes = "根据用户ID获取用户详细信息")
     @GetMapping("/{id}")
+    @MetricsMonitor(name = "getUser", description = "获取用户信息")
     public Result<UserVO> getUser(
             @ApiParam(value = "用户ID", required = true, example = "1")
             @PathVariable Long id) {

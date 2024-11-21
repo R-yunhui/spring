@@ -72,6 +72,7 @@
         <flink.version>1.16.1</flink.version>
         <swagger.version>3.0.0</swagger.version>
         <redisson.version>3.17.4</redisson.version>
+        <prometheus.version>1.12.1</prometheus.version>
     </properties>
 
     <dependencyManagement>
