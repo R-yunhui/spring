@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 /**
  * 用户管理控制器
@@ -34,10 +36,10 @@ import javax.annotation.Resource;
 @Api(tags = "用户管理接口")
 @Validated
 public class UserController {
-    
+
     @Resource
     private UserService userService;
-    
+
     /**
      * 创建用户
      *
@@ -51,7 +53,7 @@ public class UserController {
             @RequestBody @Validated UserVO userVO) {
         return Result.success(userService.createUser(userVO));
     }
-    
+
     /**
      * 更新用户信息
      *
@@ -68,7 +70,7 @@ public class UserController {
             @RequestBody @Validated UserVO userVO) {
         return Result.success(userService.updateUser(id, userVO));
     }
-    
+
     /**
      * 获取用户信息
      *
@@ -82,7 +84,7 @@ public class UserController {
             @PathVariable Long id) {
         return Result.success(userService.getUserById(id));
     }
-    
+
     /**
      * 分页查询用户列表
      *
@@ -115,5 +117,18 @@ public class UserController {
             @PathVariable Long id) {
         userService.removeById(id);
         return Result.success();
+    }
+
+    /**
+     * 批量创建测试用户
+     */
+    @ApiOperation(value = "批量创建测试用户", notes = "创建指定数量的测试用户数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "count", value = "创建数量", required = true, dataType = "Integer", example = "1000")
+    })
+    @PostMapping("/batch-test")
+    public Result<Boolean> batchCreateTestUsers(
+            @RequestParam @Min(1) @Max(100000) Integer count) {
+        return Result.success(userService.batchCreateTestUsers(count));
     }
 }

@@ -45,4 +45,12 @@ public interface UserService extends IService<User> {
      * @return 分页用户信息
      */
     Page<UserVO> listUsersByPage(Integer current, Integer size);
+    
+    /**
+     * 批量创建测试用户
+     *
+     * @param count 创建数量
+     * @return 创建结果
+     */
+    boolean batchCreateTestUsers(int count);
 } 
