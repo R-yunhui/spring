@@ -1,7 +1,9 @@
 package com.ral.young.spring.basic.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ral.young.spring.basic.common.Result;
+import com.ral.young.spring.basic.dto.UserQueryDTO;
+import com.ral.young.spring.basic.service.CustomValidateGroup;
 import com.ral.young.spring.basic.service.UserService;
 import com.ral.young.spring.basic.vo.UserVO;
 import io.swagger.annotations.Api;
@@ -57,18 +59,15 @@ public class UserController {
     /**
      * 更新用户信息
      *
-     * @param id 用户ID
      * @param userVO 用户信息
      * @return 更新后的用户信息
      */
     @ApiOperation(value = "更新用户", notes = "根据用户ID更新用户信息")
     @PutMapping("/{id}")
     public Result<UserVO> updateUser(
-            @ApiParam(value = "用户ID", required = true, example = "1")
-            @PathVariable Long id,
             @ApiParam(value = "用户信息", required = true)
-            @RequestBody @Validated UserVO userVO) {
-        return Result.success(userService.updateUser(id, userVO));
+            @RequestBody @Validated(value = {CustomValidateGroup.Crud.Update.class}) UserVO userVO) {
+        return Result.success(userService.updateUser(userVO));
     }
 
     /**
@@ -83,25 +82,6 @@ public class UserController {
             @ApiParam(value = "用户ID", required = true, example = "1")
             @PathVariable Long id) {
         return Result.success(userService.getUserById(id));
-    }
-
-    /**
-     * 分页查询用户列表
-     *
-     * @param current 当前页码
-     * @param size 每页大小
-     * @return 分页用户信息
-     */
-    @ApiOperation(value = "分页查询用户", notes = "分页获取用户列表信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "current", value = "当前页码", defaultValue = "1", paramType = "query", dataType = "Integer"),
-            @ApiImplicitParam(name = "size", value = "每页大小", defaultValue = "10", paramType = "query", dataType = "Integer")
-    })
-    @GetMapping
-    public Result<Page<UserVO>> listUsers(
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size) {
-        return Result.success(userService.listUsersByPage(current, size));
     }
 
     /**
@@ -130,5 +110,23 @@ public class UserController {
     public Result<Boolean> batchCreateTestUsers(
             @RequestParam @Min(1) @Max(100000) Integer count) {
         return Result.success(userService.batchCreateTestUsers(count));
+    }
+
+    /**
+     * 测试乐观锁并发更新
+     */
+    @ApiOperation(value = "测试乐观锁", notes = "模拟并发更新场景")
+    @PostMapping("/{id}/test-concurrent")
+    public Result<Void> testConcurrentUpdate(
+            @ApiParam(value = "用户ID", required = true, example = "1")
+            @PathVariable Long id) {
+        userService.testConcurrentUpdate(id);
+        return Result.success();
+    }
+
+    @ApiOperation("分页查询用户")
+    @PostMapping("/page")
+    public Result<IPage<UserVO>> pageUsers(@RequestBody @Validated UserQueryDTO queryDTO) {
+        return Result.success(userService.pageUsers(queryDTO));
     }
 }

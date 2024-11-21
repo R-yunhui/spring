@@ -2,8 +2,10 @@ package com.ral.young.spring.basic.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -19,9 +21,18 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig {
 
     @Bean
-    public Docket api() {
+    public Docket createRestApi() {
+        ApiInfo apiInfo =
+                new ApiInfoBuilder()
+                        .title("Basic服务API")
+                        .description("Basic服务基于SpringBoot开发，API文档集成Swagger2")
+                        .version("1.0")
+                        .license("首页")
+                        .build();
+
         return new Docket(DocumentationType.SWAGGER_2)
-                .groupName("basic")
+                .apiInfo(apiInfo)
+                .groupName("BASIC")
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.ral.young.spring.basic"))
                 .paths(PathSelectors.any())

@@ -17,6 +17,19 @@ spring:
         maximum-pool-size: 10
         minimum-idle: 5
         pool-name: hikari
+  redis:
+    database: 0
+    password: ryh123.0
+    host: 101.43.7.180
+    port: 6379
+    timeout: 10s
+    ## 连接池
+    lettuce:
+      pool:
+        max-idle: 10
+        min-idle: 2
+        max-active: 100
+        max-wait: 1000
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

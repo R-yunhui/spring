@@ -13,3 +13,7 @@ CREATE TABLE `user`
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+-- 添加version字段 支持乐观锁
+ALTER TABLE `user`
+    ADD COLUMN `version` int NOT NULL DEFAULT 1 COMMENT '乐观锁版本号' AFTER `gender`;

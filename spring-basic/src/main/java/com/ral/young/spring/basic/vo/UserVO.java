@@ -2,6 +2,7 @@ package com.ral.young.spring.basic.vo;
 
 import com.ral.young.spring.basic.entity.User;
 import com.ral.young.spring.basic.enums.CommonEnum.GenderEnum;
+import com.ral.young.spring.basic.service.CustomValidateGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,6 +25,7 @@ import javax.validation.constraints.Size;
 public class UserVO {
 
     @ApiModelProperty(value = "用户ID", example = "1")
+    @NotNull(message = "用户id不能为空", groups = {CustomValidateGroup.Crud.Update.class})
     private Long id;
 
     @ApiModelProperty(value = "用户名", example = "张三", required = true)

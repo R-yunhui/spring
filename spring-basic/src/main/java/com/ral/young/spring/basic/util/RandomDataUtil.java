@@ -1,5 +1,6 @@
 package com.ral.young.spring.basic.util;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.ral.young.spring.basic.entity.User;
 import com.ral.young.spring.basic.enums.CommonEnum;
@@ -31,6 +32,7 @@ public class RandomDataUtil {
         
         for (int i = 0; i < count; i++) {
             User user = new User();
+            user.setId(IdUtil.getSnowflakeNextId());
             // 生成姓名
             user.setName(generateRandomName());
             // 生成年龄 (18-60)
@@ -45,6 +47,7 @@ public class RandomDataUtil {
             user.setUpdateUser(1L);
             user.setCreateTime(LocalDateTime.now());
             user.setUpdateTime(LocalDateTime.now());
+            user.setVersion(1);
             users.add(user);
         }
         

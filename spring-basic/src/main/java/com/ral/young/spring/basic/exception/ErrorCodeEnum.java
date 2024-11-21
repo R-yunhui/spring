@@ -19,6 +19,7 @@ public enum ErrorCodeEnum implements IErrorCode {
     USER_EMAIL_EXISTS(40002, "邮箱已被使用"),
     USER_CREATE_ERROR(40003, "用户创建失败"),
     USER_UPDATE_ERROR(40004, "用户更新失败"),
+    USER_UPDATE_CONFLICT(40005, "用户信息已被他人修改，请刷新后重试"),
 
     // 批量插入错误
     BATCH_INSERT_ERROR(50001, "批量插入数据失败");

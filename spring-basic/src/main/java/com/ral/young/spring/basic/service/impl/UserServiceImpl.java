@@ -1,14 +1,19 @@
 package com.ral.young.spring.basic.service.impl;
 
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
+import com.ral.young.spring.basic.dto.UserQueryDTO;
 import com.ral.young.spring.basic.entity.User;
 import com.ral.young.spring.basic.exception.BusinessException;
 import com.ral.young.spring.basic.exception.ErrorCodeEnum;
 import com.ral.young.spring.basic.mapper.UserMapper;
 import com.ral.young.spring.basic.service.UserService;
+import com.ral.young.spring.basic.util.IdGenerator;
 import com.ral.young.spring.basic.util.RandomDataUtil;
 import com.ral.young.spring.basic.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +37,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private UserService userService;
+    @Resource
+    private IdGenerator idGenerator;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -51,6 +58,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = userVO.toEntity();
         // 设置默认值
         user.setIsDelete(0);
+        user.setId(idGenerator.nextId());
         // TODO: 设置当前登录用户ID
         user.setCreateUser(1L);
         user.setUpdateUser(1L);
@@ -67,37 +75,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserVO updateUser(Long id, UserVO userVO) {
-        log.info("更新用户信息，用户ID：{}，请求参数：{}", id, userVO);
-        
-        // 检查用户是否存在
+    public UserVO updateUser(UserVO userVO) {
+        log.info("更新用户信息，请求参数：{}", userVO);
+        long id = userVO.getId();
+        // 先查询，获取当前版本号
         User existUser = this.getById(id);
         if (existUser == null) {
             throw new BusinessException(ErrorCodeEnum.USER_NOT_FOUND);
         }
         
-        // 检查邮箱是否被其他用户使用
-        long count = this.lambdaQuery()
-                .eq(User::getEmail, userVO.getEmail())
-                .ne(User::getId, id)
-                .count();
-        if (count > 0) {
-            throw new BusinessException(ErrorCodeEnum.USER_EMAIL_EXISTS);
-        }
-        
-        // VO转换为实体并更新
+        // 转换并设置版本号
         User user = userVO.toEntity();
-        user.setId(id);
-        // TODO: 设置当前登录用户ID
+        user.setVersion(existUser.getVersion()); // 设置当前版本号
         user.setUpdateUser(1L);
         
-        // 更新用户信息
+        // 更新（MyBatis-Plus会自动处理版本号）
         boolean success = this.updateById(user);
         if (!success) {
-            throw new BusinessException(ErrorCodeEnum.USER_UPDATE_ERROR);
+            throw new BusinessException(ErrorCodeEnum.USER_UPDATE_CONFLICT);
         }
         
-        log.info("用户信息更新成功，用户ID：{}", id);
         return UserVO.fromEntity(this.getById(id));
     }
 
@@ -111,22 +108,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         return UserVO.fromEntity(user);
-    }
-
-    @Override
-    public Page<UserVO> listUsersByPage(Integer current, Integer size) {
-        log.info("分页查询用户列表，当前页：{}，每页大小：{}", current, size);
-        
-        // 查询用户列表
-        Page<User> page = this.page(new Page<>(current, size));
-        
-        // 转换为VO
-        Page<UserVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(page.getRecords().stream()
-                .map(UserVO::fromEntity)
-                .collect(Collectors.toList()));
-        
-        return voPage;
     }
 
     @Override
@@ -206,5 +187,57 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } finally {
             stopWatch.stop();
         }
+    }
+
+    /**
+     * 测试并发更新
+     */
+    @Override
+    public void testConcurrentUpdate(Long id) {
+        // 模拟两个线程同时更新
+        User user1 = this.getById(id);
+        User user2 = this.getById(id);
+        
+        // 线程1更新
+        user1.setName("线程1");
+        boolean success1 = this.updateById(user1);
+        log.info("线程1更新{}", success1 ? "成功" : "失败");
+        
+        // 线程2更新（会失败，因为版本号不匹配）
+        user2.setName("线程2");
+        boolean success2 = this.updateById(user2);
+        log.info("线程2更新{}", success2 ? "成功" : "失败");
+    }
+
+    @Override
+    public IPage<UserVO> pageUsers(UserQueryDTO queryDTO) {
+        log.info("分页查询用户，参数：{}", queryDTO);
+        
+        // 执行分页查询
+        Page<User> userPage = this.lambdaQuery()
+                .like(StrUtil.isNotBlank(queryDTO.getName()), User::getName, queryDTO.getName())
+                .eq(ObjectUtil.isNotNull(queryDTO.getGender()), User::getGender, queryDTO.getGender())
+                .like(StrUtil.isNotBlank(queryDTO.getEmail()), User::getEmail, queryDTO.getEmail())
+                .ge(ObjectUtil.isNotNull(queryDTO.getCreateTimeStart()), User::getCreateTime, queryDTO.getCreateTimeStart())
+                .le(ObjectUtil.isNotNull(queryDTO.getCreateTimeEnd()), User::getCreateTime, queryDTO.getCreateTimeEnd())
+                .orderByDesc(User::getCreateTime)
+                .page(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()));
+        
+        // 转换为VO对象
+        return convertToVoPage(userPage);
+    }
+    
+    /**
+     * 将实体分页对象转换为VO分页对象
+     */
+    private Page<UserVO> convertToVoPage(Page<User> entityPage) {
+        Page<UserVO> voPage = new Page<>();
+        voPage.setCurrent(entityPage.getCurrent());
+        voPage.setSize(entityPage.getSize());
+        voPage.setTotal(entityPage.getTotal());
+        voPage.setRecords(entityPage.getRecords().stream()
+                .map(UserVO::fromEntity)
+                .collect(Collectors.toList()));
+        return voPage;
     }
 } 

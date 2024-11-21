@@ -1,3 +1,5 @@
 *.class
 */classes/*
 .gitignore
+/spring-basic/target/classes/application.yml
+/spring-basic/target/classes/sql/init.sql
