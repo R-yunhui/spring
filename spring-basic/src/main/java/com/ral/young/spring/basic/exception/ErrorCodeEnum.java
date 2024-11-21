@@ -11,11 +11,14 @@ public enum ErrorCodeEnum implements IErrorCode {
     UNAUTHORIZED(401, "未授权"),
     FORBIDDEN(403, "禁止访问"),
     NOT_FOUND(404, "资源不存在"),
-    
+
     // 业务级别错误
     USER_NOT_FOUND(40001, "用户不存在"),
     USER_ALREADY_EXISTS(40002, "用户已存在"),
-    PASSWORD_ERROR(40003, "密码错误");
+    PASSWORD_ERROR(40003, "密码错误"),
+    USER_EMAIL_EXISTS(40002, "邮箱已被使用"),
+    USER_CREATE_ERROR(40003, "用户创建失败"),
+    USER_UPDATE_ERROR(40004, "用户更新失败");
 
     private final Integer code;
     private final String message;

@@ -1,69 +1,91 @@
 package com.ral.young.spring.basic.controller;
 
-import com.ral.young.spring.basic.entity.User;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ral.young.spring.basic.common.Result;
 import com.ral.young.spring.basic.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ApiResponse;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import com.ral.young.spring.basic.vo.UserVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 
+/**
+ * 用户管理控制器
+ *
+ * @author young
+ */
+@Slf4j
 @RestController
-@RequestMapping("/user")
-@Api(tags = "用户管理API")
+@RequestMapping("/api/users")
+@Tag(name = "用户管理", description = "用户相关接口")
+@Validated
 public class UserController {
 
     @Resource
     private UserService userService;
 
-    @GetMapping
-    @ApiOperation(value = "获取用户列表", notes = "返回所有用户的列表")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功返回用户列表"),
-            @ApiResponse(code = 500, message = "服务器内部错误")
-    })
-    public List<User> list() {
-        return userService.list();
-    }
-
+    /**
+     * 创建用户
+     *
+     * @param userVO 用户信息
+     * @return 创建后的用户信息
+     */
+    @Operation(summary = "创建用户", description = "创建新用户")
     @PostMapping
-    @ApiOperation(value = "保存用户信息", notes = "保存新的用户信息")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功保存用户信息"),
-            @ApiResponse(code = 500, message = "服务器内部错误")
-    })
-    public boolean save(@RequestBody @ApiParam(value = "用户信息", required = true) User user) {
-        return userService.save(user);
+    public Result<UserVO> createUser(@RequestBody @Validated @Parameter(description = "用户信息", required = true) UserVO userVO) {
+        return Result.success(userService.createUser(userVO));
     }
 
-    @PutMapping
-    @ApiOperation(value = "更新用户信息", notes = "更新现有用户的信息")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功更新用户信息"),
-            @ApiResponse(code = 500, message = "服务器内部错误")
-    })
-    public boolean update(@RequestBody @ApiParam(value = "用户信息", required = true) User user) {
-        return userService.updateById(user);
+    /**
+     * 更新用户信息
+     *
+     * @param id 用户ID
+     * @param userVO 用户信息
+     * @return 更新后的用户信息
+     */
+    @Operation(summary = "更新用户信息", description = "根据用户ID更新用户信息")
+    @PutMapping("/{id}")
+    public Result<UserVO> updateUser(
+            @Parameter(description = "用户ID", required = true, example = "1") @PathVariable Long id, @RequestBody @Validated
+    @Parameter(description = "用户信息", required = true) UserVO userVO) {
+        return Result.success(userService.updateUser(id, userVO));
     }
 
-    @DeleteMapping("/{id}")
-    @ApiOperation(value = "删除用户", notes = "根据用户ID删除用户")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "成功删除用户"),
-            @ApiResponse(code = 500, message = "服务器内部错误")
-    })
-    public boolean delete(@PathVariable @ApiParam(value = "用户ID", required = true) Long id) {
-        return userService.removeById(id);
+    /**
+     * 获取用户信息
+     *
+     * @param id 用户ID
+     * @return 用户信息
+     */
+    @Operation(summary = "获取用户信息", description = "根据用户ID获取用户信息")
+    @GetMapping("/{id}")
+    public Result<UserVO> getUser(@Parameter(description = "用户ID", required = true, example = "1") @PathVariable Long id) {
+        return Result.success(userService.getUserById(id));
+    }
+
+    /**
+     * 分页查询用户列表
+     *
+     * @param current 当前页码
+     * @param size 每页大小
+     * @return 分页用户信息
+     */
+    @Operation(summary = "分页查询用户", description = "分页获取用户列表")
+    @GetMapping
+    public Result<Page<UserVO>> listUsers(
+            @Parameter(description = "当前页码", example = "1") @RequestParam(defaultValue = "1") Integer current,
+            @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(userService.listUsersByPage(current, size));
     }
 }

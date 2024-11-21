@@ -58,6 +58,8 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 sql 语句
     cache-enabled: true               # 默认开启
+    default-enum-type-handler: com.ral.young.spring.basic.handler.GenderEnumTypeHandler
+  type-handlers-package: com.ral.young.spring.basic.handler
 
 mybatis-plus-join:
   # 是否打印 mybatis plus join banner 默认true

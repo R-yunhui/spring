@@ -1,1 +1,2 @@
 *.class
+/spring-basic/target/classes/application.yml

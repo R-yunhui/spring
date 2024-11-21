@@ -19,7 +19,7 @@ public class User {
 
     private String email;
 
-    private CommonEnum gender;
+    private CommonEnum.GenderEnum gender;
 
     @TableLogic
     private Integer isDelete;

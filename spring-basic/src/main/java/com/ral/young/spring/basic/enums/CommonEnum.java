@@ -1,27 +1,44 @@
 package com.ral.young.spring.basic.enums;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IEnum;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 public class CommonEnum {
 
-    public enum GenderEnum {
-        MALE(1, "男"), FEMALE(2, "女"), ELSE(3, "其它");
+    @Getter
+    public enum GenderEnum implements IEnum<Integer> {
 
-        @EnumValue
-        private final int code;
+        MALE(1, "男"),
 
-        @Getter
-        private final String description;
+        FEMALE(2, "女"),
 
-        GenderEnum(int code, String description) {
-            this.code = code;
-            this.description = description;
+        UNKNOWN(0, "未知");
+
+        @JsonValue
+        private final Integer value;
+        private final String desc;
+
+        GenderEnum(Integer value, String desc) {
+            this.value = value;
+            this.desc = desc;
         }
 
+        @Override
         public Integer getValue() {
-            return this.code;
+            return this.value;
+        }
+
+        public static GenderEnum fromValue(Integer value) {
+            if (value == null) {
+                return null;
+            }
+            for (GenderEnum gender : GenderEnum.values()) {
+                if (gender.value.equals(value)) {
+                    return gender;
+                }
+            }
+            return UNKNOWN;
         }
     }
-
 }
