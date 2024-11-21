@@ -31,7 +31,7 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 打印 sql 语句
     cache-enabled: true               # 默认开启
-    default-enum-type-handler: com.ral.young.spring.basic.handler.GenderEnumTypeHandler
+    default-enum-type-handler: org.apache.ibatis.type.EnumOrdinalTypeHandler
   type-handlers-package: com.ral.young.spring.basic.handler
 
 mybatis-plus-join:
