@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: spring-basic
+  cloud:
+    ## nacos 的配置
+    nacos:
+      discovery:
+        group: DEFAULT_GROUP
+        server-addr: localhost:8848
+        namespace: 8d6c31eb-3577-4238-ac51-dd3c8cdb8b24
+      config:
+        server-addr: localhost:8848
+        name: spring-basic
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        namespace: 8d6c31eb-3577-4238-ac51-dd3c8cdb8b24
+        enabled: true
+
+dubbo:
+  application:
+    name: spring-basic
+  registry:
+    address: nacos://localhost:8848
+  protocol:
+    name: dubbo
+    port: 20880

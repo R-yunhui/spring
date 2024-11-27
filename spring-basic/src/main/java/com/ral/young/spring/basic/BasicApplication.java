@@ -1,5 +1,6 @@
 package com.ral.young.spring.basic;
 
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @MapperScan("com.ral.young.spring.basic.mapper")
 @EnableTransactionManagement
+@EnableDubbo
 public class BasicApplication {
 
     public static void main(String[] args) {
