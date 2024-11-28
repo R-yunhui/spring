@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @MapperScan("com.ral.young.spring.basic.mapper")
 @EnableTransactionManagement
-@EnableDubbo
+@EnableDubbo(scanBasePackages = {"com.ral.young.spring.basic.dubbo"})
 public class BasicApplication {
 
     public static void main(String[] args) {

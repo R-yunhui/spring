@@ -13,14 +13,7 @@ spring:
         name: spring-basic
         file-extension: yaml
         group: DEFAULT_GROUP
-        namespace: 8d6c31eb-3577-4238-ac51-dd3c8cdb8b24
+        namespace: ${spring.cloud.nacos.discovery.namespace}
         enabled: true
+        refresh-enabled: true
 
-dubbo:
-  application:
-    name: spring-basic
-  registry:
-    address: nacos://localhost:8848
-  protocol:
-    name: dubbo
-    port: 20880
