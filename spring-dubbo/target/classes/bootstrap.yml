@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: spring-dubbo
+  cloud:
+    ## nacos 的配置
+    nacos:
+      discovery:
+        group: DEFAULT_GROUP
+        server-addr: localhost:8848
+        namespace: 8d6c31eb-3577-4238-ac51-dd3c8cdb8b24
+      config:
+        server-addr: localhost:8848
+        name: spring-dubbo
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        enabled: true
+        refresh-enabled: true
+

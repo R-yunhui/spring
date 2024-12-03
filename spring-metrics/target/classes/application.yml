@@ -1,0 +1,25 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /metrics
+
+spring:
+  application:
+    name: spring-metrics
+  task:
+    scheduling:
+      pool:
+        size: 4
+# 暴露所有端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  # 将监控指标暴露给 prometheus ，启用导出器
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
