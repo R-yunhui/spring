@@ -232,6 +232,8 @@ public class MinioService implements ApplicationRunner {
             uploadParsedContent(parsedContentList, uploadedFiles, tag);
             stopWatch.stop();
 
+            // todo 1.上传源文件到 Minio  2.存储本次数据集的 tag 以及 上传的文件ID 到数据库，方便后续的分页查询以及文件内容的修改
+
             // 输出统计信息
             log.info("ZIP文件处理完成 - 总文件数: {}, 总对话数: {}, 总耗时: {}ms\n任务详情:\n{}", processedFiles.get(), uploadedFiles.size(), stopWatch.getTotalTimeMillis(), stopWatch.prettyPrint(TimeUnit.MILLISECONDS));
         } catch (Exception e) {
@@ -642,7 +644,7 @@ public class MinioService implements ApplicationRunner {
         if (CollUtil.isEmpty(result)) {
             return result;
         }
-        
+
         return result.stream().map(o -> KeywordResult.KeyValue.builder()
                         .key(cleanKeyword(o.getKey()))
                         .value(cleanKeyword(o.getValue())).build())
@@ -723,105 +725,5 @@ public class MinioService implements ApplicationRunner {
                 .replaceAll("\\s+", " ")  // 将多个空白字符替换为单个空格
                 .trim();  // 去除首尾空格
     }
-
-//    /**
-//     * 从System文本中提取关键字
-//     * 提取规则：## 后面的文本，直到遇到换行符
-//     */
-//    private static List<String> extractSystemKeywords(String content) {
-//        if (content == null || content.isEmpty()) {
-//            return Collections.emptyList();
-//        }
-//
-//        return Arrays.stream(content.split("\n")).filter(line -> line.trim().startsWith("##")).map(line -> {
-//            // 获取##后面的文本，直到行尾
-//            int start = line.indexOf("##") + 2;
-//            return cleanKeyword(line.substring(start).trim());
-//        }).collect(Collectors.toList());
-//    }
-//
-//    /**
-//     * 从Response文本中提取关键字
-//     * 提取规则：处理可能的JSON格式的字符串，提取所有关键字
-//     */
-//    private static List<String> extractResponseKeywords(String content) {
-//        if (StrUtil.isBlank(content)) {
-//            return Collections.emptyList();
-//        }
-//        List<String> keywords = new ArrayList<>();
-//        try {
-//            // 尝试解析为JSON，如果失败则按非JSON处理
-//            if (isValidJson(content)) {
-//                JSONObject jsonObject = JSONUtil.parseObj(content);
-//                extractKeysWithJson(jsonObject, keywords);
-//            } else {
-//                // 处理非JSON格式的文本提取
-//                extractTextKeywords(content, keywords);
-//            }
-//        } catch (Exception e) {
-//            log.error("解析Response失败: ", e);
-//        }
-//        return keywords;
-//    }
-//
-//    /**
-//     * 递归提取JSON对象中的所有键
-//     */
-//    private static void extractKeysWithJson(JSONObject jsonObject, List<String> keys) {
-//        for (String key : jsonObject.keySet()) {
-//            keys.add(key);
-//            Object value = jsonObject.get(key);
-//            if (value instanceof JSONObject) {
-//                extractKeysWithJson((JSONObject) value, keys);
-//            } else if (value instanceof JSONArray) {
-//                JSONArray array = (JSONArray) value;
-//                for (Object item : array) {
-//                    if (item instanceof JSONObject) {
-//                        extractKeysWithJson((JSONObject) item, keys);
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    /**
-//     * 检查字符串是否为有效的JSON格式
-//     */
-//    private static boolean isValidJson(String content) {
-//        try {
-//            JSONUtil.parseObj(content);
-//            return true;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-//
-//    /**
-//     * 从非JSON格式的文本中提取关键字
-//     */
-//    private static void extractTextKeywords(String content, List<String> keywords) {
-//        String[] lines = content.split("\\n");
-//        for (String line : lines) {
-//            String[] parts = line.split(",");
-//            for (String part : parts) {
-//                if (part.contains(":")) {
-//                    String key = part.substring(0, part.indexOf(":")).trim();
-//                    keywords.add(cleanKeyword(key));
-//                }
-//            }
-//        }
-//    }
-//
-//    /**
-//     * 清理关键字中的特殊字符
-//     */
-//    private static String cleanKeyword(String keyword) {
-//        if (StrUtil.isBlank(keyword)) {
-//            return "";
-//        }
-//        return keyword.replaceAll("[\"{}\\[\\]\\\\]", "") // 去除引号、花括号、方括号、反斜杠
-//                .replaceAll("\\s+", " ")  // 将多个空白字符替换为单个空格
-//                .trim();  // 去除首尾空格
-//    }
 }
 
