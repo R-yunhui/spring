@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class PaginationController {
@@ -23,9 +24,9 @@ public class PaginationController {
     private MinioService minioService;
 
     @PostMapping("/upload/zip-json")
-    public ResponseEntity<List<Long>> uploadZipJsonFiles(@RequestParam("file") MultipartFile zipFile, @RequestParam("dialogueFormat") DialogueFormat dialogueFormat) {
-        List<Long> uploadedFiles = minioService.uploadZipJsonFiles(zipFile, dialogueFormat);
-        return ResponseEntity.ok(uploadedFiles);
+    public ResponseEntity<Void> uploadZipJsonFiles(@RequestParam("file") MultipartFile zipFile, @RequestParam("dialogueFormat") DialogueFormat dialogueFormat) {
+        CompletableFuture.runAsync(() -> minioService.uploadZipJsonFiles(zipFile, dialogueFormat));
+        return ResponseEntity.ok(null);
     }
 
     @GetMapping("/list")

@@ -51,7 +51,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -82,8 +81,6 @@ public class MinioService implements ApplicationRunner {
     private String sourceBucketName;
 
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(8, 16, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10000), new ThreadFactoryBuilder().setNamePrefix("minio-oss-").build(), new ThreadPoolExecutor.DiscardOldestPolicy());
-
-    private static final Pattern SECTION_PATTERN = Pattern.compile("##\\s*(.*?)\\s*\\n(.*?)(?=\\n)", Pattern.DOTALL);
 
     static {
         // 线程预热
@@ -171,7 +168,7 @@ public class MinioService implements ApplicationRunner {
             int finalPartNumber = partNumber;
             CompletableFuture<Void> partFuture = CompletableFuture.runAsync(() -> {
                 try {
-                    PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(bucketName).object(fileName + "-" + finalPartNumber) // 为每个分片创建唯一的文件名
+                    PutObjectArgs objectArgs = PutObjectArgs.builder().bucket(sourceBucketName).object(fileName + "-" + finalPartNumber) // 为每个分片创建唯一的文件名
                             .stream(partStream, size, -1).build();
                     minioClient.putObject(objectArgs);
                 } catch (Exception e) {
@@ -233,6 +230,9 @@ public class MinioService implements ApplicationRunner {
             stopWatch.stop();
 
             // todo 1.上传源文件到 Minio  2.存储本次数据集的 tag 以及 上传的文件ID 到数据库，方便后续的分页查询以及文件内容的修改
+            stopWatch.start("上传源文件到Minio");
+            uploadLargeFile(zipFile, tag + ".zip", System.currentTimeMillis());
+            stopWatch.stop();
 
             // 输出统计信息
             log.info("ZIP文件处理完成 - 总文件数: {}, 总对话数: {}, 总耗时: {}ms\n任务详情:\n{}", processedFiles.get(), uploadedFiles.size(), stopWatch.getTotalTimeMillis(), stopWatch.prettyPrint(TimeUnit.MILLISECONDS));
@@ -251,7 +251,7 @@ public class MinioService implements ApplicationRunner {
         AtomicInteger processedFiles = new AtomicInteger(0);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(zipFile.getInputStream())) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(zipFile.getInputStream(), StandardCharsets.UTF_8)) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".json")) {
