@@ -10,6 +10,10 @@ import com.alibaba.excel.write.handler.SheetWriteHandler;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
 import com.alibaba.excel.write.metadata.holder.WriteWorkbookHolder;
+import com.alibaba.excel.write.metadata.style.WriteCellStyle;
+import com.alibaba.excel.write.metadata.style.WriteFont;
+import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
+import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.column.SimpleColumnWidthStyleStrategy;
 import com.google.common.collect.Lists;
 import com.ral.young.metrics.excel.DeviceData;
@@ -19,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.springframework.boot.ApplicationArguments;
@@ -30,6 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,7 +109,6 @@ public class ExcelService implements ApplicationRunner {
     public void downloadTemplate(HttpServletResponse response) {
         try {
             List<OrgData> orgData = orgDataList;
-            orgData = orgData.stream().limit(30).collect(Collectors.toList());
             // 将组织数据转换为下拉列表格式
             List<String> orgDropdownList = new ArrayList<>();
             for (OrgData org : orgData) {
@@ -129,11 +136,51 @@ public class ExcelService implements ApplicationRunner {
             String[] organizationStructures = orgDropdownList.toArray(new String[0]);
             response.setContentType("application/vnd.ms-excel");
             response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode("设备导入模板.xlsx", "UTF-8"));
-            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), DeviceData.class)
-                    .registerWriteHandler(new DropdownBoxWriteHandler(2, organizationStructures))
+
+            // 创建隐藏的sheet用于存储下拉选项
+            WriteSheet hiddenSheet = EasyExcel.writerSheet("hidden")
+                    .needHead(false)
                     .build();
-            WriteSheet writeSheet = EasyExcel.writerSheet("设备导入模板模板").build();
-            excelWriter.write(null, writeSheet);
+
+            // 写入组织数据到隐藏sheet
+            List<List<String>> orgList = Arrays.stream(organizationStructures)
+                    .map(Collections::singletonList)
+                    .collect(Collectors.toList());
+
+            // 设置数据有效性（下拉框）
+            String formulaRange = String.format("hidden!$A$1:$A$%d", organizationStructures.length);
+            // 创建一个隐藏的sheet来存储下拉选项数据
+            ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), DeviceData.class)
+                    .registerWriteHandler(new DropdownBoxWriteHandler(2, formulaRange))
+                    // 添加一个处理器来隐藏sheet
+                    .registerWriteHandler(new SheetWriteHandler() {
+                        @Override
+                        public void beforeSheetCreate(WriteWorkbookHolder writeWorkbookHolder, WriteSheetHolder writeSheetHolder) {
+                            // TODO document why this method is empty
+                        }
+
+                        @Override
+                        public void afterSheetCreate(WriteWorkbookHolder writeWorkbookHolder, WriteSheetHolder writeSheetHolder) {
+                            // 如果是隐藏sheet，则设置其为隐藏状态
+                            if ("hidden".equals(writeSheetHolder.getSheetName())) {
+                                writeWorkbookHolder.getWorkbook().setSheetHidden(writeWorkbookHolder.getWorkbook().getSheetIndex(writeSheetHolder.getSheet()), true);
+                            }
+                        }
+                    }).build();
+
+            // 写入下拉选项数据到隐藏sheet
+            excelWriter.write(orgList, hiddenSheet);
+
+            // 创建模板sheet并写入表头
+            WriteSheet writeSheet = EasyExcel.writerSheet("设备导入模板")
+                    .head(DeviceData.class)
+                    .build();
+
+            // 写入空数据行作为示例
+            List<DeviceData> templateData = Collections.singletonList(new DeviceData());
+            excelWriter.write(templateData, writeSheet);
+
+            // 完成写入并关闭
             excelWriter.finish();
         } catch (IOException e) {
             throw new RuntimeException("生成Excel文件失败", e);
@@ -219,18 +266,17 @@ public class ExcelService implements ApplicationRunner {
 
 
 class DropdownBoxWriteHandler implements SheetWriteHandler {
-
     private final int columnIndex;
-    private final String[] dropdownItems;
+    private final String formulaRange;  // 改为String类型
 
-    public DropdownBoxWriteHandler(int columnIndex, String[] dropdownItems) {
+    public DropdownBoxWriteHandler(int columnIndex, String formulaRange) {  // 修改构造函数参数
         this.columnIndex = columnIndex;
-        this.dropdownItems = dropdownItems;
+        this.formulaRange = formulaRange;
     }
 
     @Override
     public void beforeSheetCreate(WriteWorkbookHolder writeWorkbookHolder, WriteSheetHolder writeSheetHolder) {
-        // Not used
+
     }
 
     @Override
@@ -238,11 +284,13 @@ class DropdownBoxWriteHandler implements SheetWriteHandler {
         Sheet sheet = writeSheetHolder.getSheet();
         DataValidationHelper helper = sheet.getDataValidationHelper();
         CellRangeAddressList addressList = new CellRangeAddressList(1, 1000000, columnIndex, columnIndex);
-        DataValidationConstraint constraint = helper.createExplicitListConstraint(dropdownItems);
+        // 使用createFormulaListConstraint而不是createExplicitListConstraint
+        DataValidationConstraint constraint = helper.createFormulaListConstraint(formulaRange);
         DataValidation dataValidation = helper.createValidation(constraint, addressList);
         dataValidation.setShowErrorBox(true);
         sheet.addValidationData(dataValidation);
     }
+    // ... existing code ...
 }
 
 class CustomReadListener extends AnalysisEventListener<DeviceData> {
