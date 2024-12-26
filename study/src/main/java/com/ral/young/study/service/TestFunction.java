@@ -37,10 +37,10 @@ public class TestFunction implements CommandLineRunner {
     public void run(String... args) {
         double price = 100.0;
         Double total = functionMap.get("高级会员").apply(price);
-        log.info("高级会员需要支付：" + total);
+        log.info("高级会员需要支付：{}", total);
         total = functionMap.get("中级会员").apply(price);
-        log.info("中级会员需要支付：" + total);
+        log.info("中级会员需要支付：{}", total);
         total = functionMap.get("普通会员").apply(price);
-        log.info("普通会员需要支付：" + total);
+        log.info("普通会员需要支付：{}", total);
     }
 }

@@ -13,15 +13,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class DeviceData {
-    @ExcelProperty("设备编码")
+
+    @ExcelProperty(value = "设备编码")
     private String deviceCode;
 
-    @ExcelProperty("接入平台标识")
+    @ExcelProperty(value = "接入平台标识")
     private String platformIdentifier;
 
-    @ExcelProperty(value = "组织结构", converter = ExcelDropDownConverter.class)
+    @ExcelProperty(value = "组织结构")
     private String organizationStructure;
 
-    @ExcelProperty("外部组织编码")
+    @ExcelProperty(value = "外部组织编码")
     private String externalOrgCode;
 }

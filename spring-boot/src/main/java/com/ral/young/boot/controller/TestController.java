@@ -36,4 +36,9 @@ public class TestController {
         testService.testSendAlarmDataOne(testVO);
     }
 
+    @GetMapping(value = "/sendToBigModel")
+    public void sendToBigModel(String token) {
+        testService.sendToBigModel(token);
+    }
+
 }

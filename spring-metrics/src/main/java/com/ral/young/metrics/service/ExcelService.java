@@ -10,10 +10,6 @@ import com.alibaba.excel.write.handler.SheetWriteHandler;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
 import com.alibaba.excel.write.metadata.holder.WriteWorkbookHolder;
-import com.alibaba.excel.write.metadata.style.WriteCellStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
-import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
-import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.column.SimpleColumnWidthStyleStrategy;
 import com.google.common.collect.Lists;
 import com.ral.young.metrics.excel.DeviceData;
@@ -23,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.springframework.boot.ApplicationArguments;
@@ -48,6 +42,7 @@ public class ExcelService implements ApplicationRunner {
     private List<OrgData> orgDataList;
 
     public void uploadExcel(MultipartFile file) throws IOException {
+
         // 创建一个监听器来处理Excel数据
         AnalysisEventListener<DeviceData> listener = new AnalysisEventListener<DeviceData>() {
             private final List<DeviceSaveData> dataList = new ArrayList<>();
@@ -81,7 +76,7 @@ public class ExcelService implements ApplicationRunner {
                     }
 
                     dataList.add(DeviceSaveData.builder().deviceCode(data.getDeviceCode())
-                            .orgCode(orgCode.toString())
+                            .orgCode(orgCode.toString()).platformIdentifier(data.getPlatformIdentifier())
                             .externalOrgCode(data.getExternalOrgCode()).build());
                 }
             }
@@ -92,8 +87,10 @@ public class ExcelService implements ApplicationRunner {
                 log.info("解析完成，共解析到 {} 条数据 , 详细数据: {}", dataList.size(), JSONUtil.toJsonStr(dataList));
             }
         };
-
-        EasyExcel.read(file.getInputStream(), DeviceData.class, listener).sheet().doRead();
+        EasyExcel.read(file.getInputStream(), DeviceData.class, listener)
+                .sheet("设备导入模板")
+                .headRowNumber(1)  // 设置头部（列名）所在的行号，从0开始计数
+                .doRead();
     }
 
     public void downloadExcel(String fileName) {
