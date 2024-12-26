@@ -1,5 +1,7 @@
 package com.ral.young.study.ddd;
 
+import lombok.Getter;
+
 /**
  * 使用充血模型 - 枚举
  *
@@ -7,6 +9,7 @@ package com.ral.young.study.ddd;
  * @date 2023-11-14 14:11
  * @since 1.0.0
  */
+@Getter
 public enum OperateEnum {
 
     ADDITION("加法", '+') {
@@ -52,14 +55,6 @@ public enum OperateEnum {
     OperateEnum(String value, char operate) {
         this.value = value;
         this.operate = operate;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public char getOperate() {
-        return operate;
     }
 
     public abstract Double operate(double numOne, double numTwo);
