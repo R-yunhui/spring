@@ -42,6 +42,7 @@
         <module>spring-basic</module>
         <module>spring-dubbo</module>
         <module>spring-metrics</module>
+        <module>spring-new</module>
     </modules>
 
     <parent>
