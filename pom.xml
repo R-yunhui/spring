@@ -77,6 +77,8 @@
         <redisson.version>3.17.4</redisson.version>
         <prometheus.version>1.12.1</prometheus.version>
         <dubbo.version>3.2.6</dubbo.version>
+        <zxing.version>3.4.1</zxing.version>
+        <jsonpath.version>2.4.0</jsonpath.version>
     </properties>
 
     <dependencyManagement>
