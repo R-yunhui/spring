@@ -1,10 +1,10 @@
 package com.ral.young.spring.demo.converter.util;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.pinyin.PinyinUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import lombok.experimental.UtilityClass;
-
-import java.util.Map;
 
 @UtilityClass
 public class ConversionUtils {
@@ -40,11 +40,17 @@ public class ConversionUtils {
     /**
      * 获取标签代码
      */
-    public String getLabelCode(String labelName, Map<String, String> mapping) {
-        if (mapping != null && mapping.containsKey(labelName)) {
-            return mapping.get(labelName);
+    public String getLabelCode(String labelName) {
+        // 如果是中文直接返回拼音，反之返回原值
+        if (containsChinese(labelName)) {
+            return PinyinUtil.getPinyin(labelName, StrUtil.EMPTY);
         }
-        return "小汽车".equals(labelName) ? "car" : labelName.toLowerCase();
+        return labelName;
+    }
+
+    // 判断是否包含中文字符
+    public static boolean containsChinese(String str) {
+        return str.matches(".*[\\u4e00-\\u9fa5]+.*");
     }
 
     /**
@@ -55,12 +61,12 @@ public class ConversionUtils {
             JSONObject leftTop = points.getJSONObject(0);
             JSONObject rightTop = points.getJSONObject(1);
             JSONObject leftBottom = points.getJSONObject(2);
-            
-            return new int[] {
-                leftTop.getInt("x"),    // xmin
-                leftTop.getInt("y"),    // ymin
-                rightTop.getInt("x"),   // xmax
-                leftBottom.getInt("y")  // ymax
+
+            return new int[]{
+                    leftTop.getInt("x"),    // xmin
+                    leftTop.getInt("y"),    // ymin
+                    rightTop.getInt("x"),   // xmax
+                    leftBottom.getInt("y")  // ymax
             };
         }
         return null;

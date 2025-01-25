@@ -190,7 +190,7 @@ public class LargeFileConverter {
                             if (currentObject != null) {
                                 String labelName = reader.getElementText();
                                 currentObject.set("labelName", labelName);
-                                currentObject.set("labelCode", ConversionUtils.getLabelCode(labelName, null));
+                                currentObject.set("labelCode", ConversionUtils.getLabelCode(labelName));
                             }
                             break;
                         case "bndbox":

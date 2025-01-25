@@ -79,6 +79,7 @@
         <dubbo.version>3.2.6</dubbo.version>
         <zxing.version>3.4.1</zxing.version>
         <jsonpath.version>2.4.0</jsonpath.version>
+        <pinyin.version>2.0.3.RELEASE</pinyin.version>
     </properties>
 
     <dependencyManagement>

@@ -32,7 +32,7 @@ public class XmlToJsonConverter implements FormatConverter {
     private String doConvert(String input) {
         Document doc = XmlUtil.parseXml(input);
         JSONObject rootJson = new JSONObject();
-        
+
         // 处理文件信息
         String filename = getElementText(doc, "filename");
         String width = getElementText(doc, "width");
@@ -57,22 +57,22 @@ public class XmlToJsonConverter implements FormatConverter {
 
     private JSONObject processObject(Element object) {
         JSONObject annotation = new JSONObject();
-        
+
         // 处理标签名称
         String labelName = getElementTextContent(object, "name");
         if (StrUtil.isNotEmpty(labelName)) {
             annotation.set("labelName", labelName);
-            annotation.set("labelCode", ConversionUtils.getLabelCode(labelName, null));
-            
+            annotation.set("labelCode", ConversionUtils.getLabelCode(labelName));
+
             // 处理边界框
             Element bndbox = (Element) object.getElementsByTagName("bndbox").item(0);
             if (bndbox != null) {
                 processBoundingBox(bndbox, annotation);
             }
-            
+
             return annotation;
         }
-        
+
         return null;
     }
 
