@@ -1,0 +1,6 @@
+sse:
+  timeout: 60000
+  heartbeat:
+    interval: 15000
+  max:
+    clients: 1000
