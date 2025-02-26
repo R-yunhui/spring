@@ -1,0 +1,27 @@
+<AiAbility Name="VehicleBreakIn" Tag="车辆入侵">
+    <KLLimitedTimeFilter Params='{"periodTimes":[{"startTime":"00:00","endTime":"00:00"}],"interval":0.2}' DispatcherType="Sync" />
+    <KLDetection Params='{"models":["PersonCar"]}' DispatcherType="Sync" />
+    <KLPropertyFilter Params='{"labels":["car","car_night","car_roof","car_small","car_rear","car_side","car_head","car_police_car","car_police_car_head","car_police_car_side","car_police_car_rear","car_police_car_roof","pickup_truck","pickup_roof","pickup_rear","pickup_side","pickup_head","pickup_road_construction_rescue","pickup_police","van","van_small","van_roof","van_rear","van_side","van_head","van_police_car","van_policecar_small","van_police_car_head","van_police_car_side","van_police_car_rear","van_police_car_roof","van_ambulance","van_ambulance_small","van_ambulance_head","van_ambulance_side","van_ambulance_rear","van_ambulance_roof","van_motor_home","van_motor_home_small","van_motor_home_head","van_motor_home_side","van_motor_home_rear","van_motor_home_roof","truck_side","truck_roof","truck_head","truck_body","truck_rear","truck_small","truck_compartment_coverage","truck_light_and_small","truck_light_and_small_side","truck_light_and_small_rear","truck_van","truck_van_side","truck_van_rear","truck_tractor","truck_tractor_side","truck_tractor_rear","truck_muck_truck","truck_muck_truck_side","truck_dump_truck_roof","truck_muck_truck_rear","truck_rail","truck_rail_side","truck_rail_rear","truck_flat","truck_flat_side","truck_flat_rear","truck_grate_type","truck_grate_side","truck_grate_rear","truck_rescue_trailer","truck_rescue_trailer_side","truck_transport_trailer_empty","truck_transport_trailer_empty_side","truck_transport_trailer_load","truck_transport_trailer_load_side","truck_engineering_vehicle_trailer_empty","truck_engineering_trailer_empty_side","truck_engineering_vehicle_trailer_load","truck_engineering_trailer_load_side","truck_road_rescue","truck_van_dangerous_chemical_vehicle","truck_van_dangerous_chemical_vehicle_rear","truck_van_dangerous_chemical_vehicle_side","forklift","forklift_side","forklift_rear","forklift_head","engineering_vehicle_roof","engineering_vehicle_rear","engineering_vehicle_small","bulldozer","bulldozer_head","bulldozer_side","crane","crane_head","crane_side","crane_rear","crane_road_rescue","roller","roller_head","roller_side","roller_rear","excavator","excavator_head","excavator_side","application_vehicle_roof","application_vehicle_small","cement_tanker","cement_tanker_side","cement_tanker_rear","tanker","tanker_rear","tanker_side","sprinkler","sprinkler_rear","sprinkler_side","concrete_truck_mixer","concrete_truck_mixer_rear","concrete_truck_mixer_side","concrete_truck_earth_pump","concrete_truck_earth_pump_rear","concrete_truck_earth_pump_side","fire_engine","fire_truck_rear","fire_truck_side","garbage_truck","garbage_truck_rear","garbage_truck_side","public_transport_vehicles_head","public_transport_vehicles_rear","public_transport_vehicles_side","public_transport_vehicles_small","public_transport_vehicles_roof","bus","big_bus","double_decker_bus","agricultural_tractor_head","agricultural_tractors_side","agricultural_tractor_rear","agricultural_tractors_small","agricultural_tractors_open","agricultural_tractor_van","cleaning_vehicle_large","cleaning_vehicle_large_head","cleaning_sprinkler","cleaning_vehicle_small","cleaning_vehicle_small_side","cleaning_vehicle_small_head","foggy_vehicle","foggy_vehicle_side","foggy_vehicle_rear","cleaning_foggy_vehicle","foggy_sprinkler_large","foggy_sprinkler_large_side","foggy_sprinkler_large_rear","foggy_sprinkler_small","foggy_sprinkler_small_side","foggy_sprinkler_small_rear","garbage_foggy_vehicle","dust_suppression_vehicle","dust_suppression_vehicle_side","dust_suppression_vehicle_rear"],"minBox":{"width":25,"height":25},"threshold":0.4}' DispatcherType="Sync" />
+    <KLPositionFilter Params='{"areaBoxes":[],"pointType":2,"shieldAreas":[],"arealsReverse":false}' DispatcherType="Sync" />
+    <KLTracker Params='{"type":"TT_MoveByteTrace", "interval":0.08, "timeout":3, "trackThresh":0.35,"matchThresh":0.8}' DispatcherType="Sync" />
+    <BreakInAlarm Params='{"areaBoxes":[],"pointType":2,"recordVideo":true, "objMinCount":1,"shieldAreas":[],"minBox": {"width": 50, "height": 50},  "event" : "VehicleBreakIn", "repeatAlarm":false,"alarmInterval": 10,"oneByOne":false}' DispatcherType="Sync"/>
+    <Bind SrcService="KLVideoDecoder">
+        <DstService Name="KLLimitedTimeFilter" SubDataTypes="BGR_FRAME" />
+    </Bind>
+    <Bind SrcService="KLLimitedTimeFilter">
+        <DstService Name="KLDetection" SubDataTypes="BGR_FRAME" />
+        <DstService Name="KLTracker" SubDataTypes="BGR_FRAME" />
+    </Bind>
+    <Bind SrcService="KLDetection">
+        <DstService Name="KLPropertyFilter" SubDataTypes="KL_OBJECT_DETECT_DATA" />
+    </Bind>
+    <Bind SrcService="KLPropertyFilter">
+        <DstService Name="KLPositionFilter" SubDataTypes="KL_OBJECT_DETECT_DATA" />
+    </Bind>
+    <Bind SrcService="KLPositionFilter">
+        <DstService Name="KLTracker" SubDataTypes="KL_OBJECT_DETECT_DATA" />
+    </Bind>
+    <Bind SrcService="KLTracker">
+        <DstService Name="BreakInAlarm" SubDataTypes="TRACE_OBJECT_DATA"/>
+    </Bind>
+</AiAbility>
