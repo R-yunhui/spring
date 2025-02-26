@@ -1,5 +1,6 @@
 package com.ral.young.spring.demo;
 
+import cn.hutool.core.util.StrUtil;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author renyunhui
@@ -29,45 +32,12 @@ import java.nio.file.Paths;
 public class XmlJsonPathParser {
 
     /**
-     * 从XML中查找指定节点的Params属性中的JSON数据
+     * 批量更新XML中Params属性的JSON数据
      * @param xmlContent XML内容
-     * @param nodeName 要查找的节点名称
-     * @param jsonPath 要查找的JsonPath表达式
-     * @return 查找到的值
-     */
-    public static Object findValueInXmlNodeParams(String xmlContent, String nodeName, String jsonPath) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8)));
-
-            // 查找指定的节点
-            NodeList nodeList = doc.getElementsByTagName(nodeName);
-            if (nodeList.getLength() > 0) {
-                Element element = (Element) nodeList.item(0);
-                String paramsJson = element.getAttribute("Params");
-
-                if (!paramsJson.isEmpty()) {
-                    // 使用JsonPath解析JSON字符串
-                    return JsonPath.read(paramsJson, jsonPath);
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            log.error("解析XML失败", e);
-            return null;
-        }
-    }
-
-    /**
-     * 更新XML节点中Params属性的JSON数据
-     * @param xmlContent XML内容
-     * @param nodeName 要更新的节点名称
-     * @param jsonPath 要更新的JsonPath表达式
-     * @param newValue 新的值
+     * @param updates JsonPath和新值的映射关系
      * @return 更新后的XML字符串
      */
-    public static String updateValueInXmlNodeParams(String xmlContent, String nodeName, String jsonPath, Object newValue) {
+    public static String batchUpdateValuesInXmlParams(String xmlContent, Map<String, Object> updates) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setValidating(false);
@@ -76,51 +46,112 @@ public class XmlJsonPathParser {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8)));
 
-            NodeList nodeList = doc.getElementsByTagName(nodeName);
-            if (nodeList.getLength() > 0) {
-                Element element = (Element) nodeList.item(0);
-                String paramsJson = element.getAttribute("Params");
+            NodeList allNodes = doc.getElementsByTagName("*");
+            boolean hasUpdates = false;
 
-                if (!paramsJson.isEmpty()) {
-                    // 使用JsonPath更新JSON字符串
-                    DocumentContext jsonContext = JsonPath.parse(paramsJson);
-                    jsonContext.set(jsonPath, newValue);
-                    String updatedJson = jsonContext.jsonString();
+            for (int i = 0; i < allNodes.getLength(); i++) {
+                Element element = (Element) allNodes.item(i);
+                if (element.hasAttribute("Params")) {
+                    String paramsJson = element.getAttribute("Params");
+                    if (StrUtil.isNotBlank(paramsJson)) {
+                        boolean nodeUpdated = false;
+                        DocumentContext jsonContext = JsonPath.parse(paramsJson);
 
-                    // 直接更新节点的Params属性，不进行转义
-                    element.setAttribute("Params", updatedJson);
+                        for (Map.Entry<String, Object> update : updates.entrySet()) {
+                            try {
+                                // 尝试更新值，如果路径不存在会抛出异常
+                                jsonContext.set(update.getKey(), update.getValue());
+                                nodeUpdated = true;
+                            } catch (Exception e) {
+                                // 路径不存在或其他错误，继续下一个
+                                log.debug("节点 {} 不包含路径 {}", element.getNodeName(), update.getKey());
+                            }
+                        }
 
-                    // 使用自定义方法将DOM转换为字符串
-                    return domToString(doc);
+                        if (nodeUpdated) {
+                            // 直接使用更新后的JSON字符串
+                            element.setAttribute("Params", jsonContext.jsonString());
+                            hasUpdates = true;
+                        }
+                    }
                 }
             }
-            return xmlContent;
+
+            return hasUpdates ? formatXml(doc) : xmlContent;
         } catch (Exception e) {
             log.error("更新XML失败", e);
             return xmlContent;
         }
     }
 
-    private static String domToString(Document doc) throws Exception {
+    /**
+     * 格式化XML文档
+     */
+    private static String formatXml(Document doc) throws Exception {
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer transformer = tf.newTransformer();
 
-        // 设置输出属性
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");  // 修改这里，设置为 "yes" 来移除 XML 声明
 
-        // 使用StringBuilder来构建输出
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(doc), new StreamResult(writer));
 
-        // 手动替换转义字符
-        return writer.toString()
-                .replace("&quot;", "\"")
-                .replace("&amp;", "&")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">");
+        // 使用StringBuilder进行字符串处理
+        StringBuilder result = new StringBuilder(writer.toString());
+        NodeList allNodes = doc.getElementsByTagName("*");
+
+        // 从后向前处理节点，避免替换位置影响
+        for (int i = allNodes.getLength() - 1; i >= 0; i--) {
+            Element element = (Element) allNodes.item(i);
+            if (element.hasAttribute("Params")) {
+                String nodeName = element.getNodeName();
+                String params = element.getAttribute("Params");
+
+                int startPos = result.indexOf("<" + nodeName);
+                int endPos = result.indexOf("/>", startPos) + 2;
+                if (startPos >= 0 && endPos > startPos) {
+                    String replacement = "<" + nodeName + " DispatcherType=\"Sync\" Params='" + params + "'/>";
+                    result.replace(startPos, endPos, replacement);
+                }
+            }
+        }
+
+        return result.toString().trim();  // 添加 trim() 移除可能的前后空白
+    }
+
+    // 测试方法
+    public static void main(String[] args) {
+        try {
+            // 输入输出文件路径
+            String inputFilePath = "C:\\Users\\Administrator\\Desktop\\学习中心v1.5\\测试能力模板转换功能\\原始能力模板.xml";
+            String outputFilePath = "C:\\Users\\Administrator\\Desktop\\学习中心v1.5\\测试能力模板转换功能\\转换后的能力模板.xml";
+
+            // 读取XML文件
+            String xmlContent = readFile(inputFilePath);
+            if (xmlContent == null) {
+                log.info("读取文件失败！");
+                return;
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("$.models", new String[]{"NewModel1", "NewModel2"});
+            updates.put("$.labels", new String[]{"plastic_bag", "bottle", "bottle_pile"});
+
+            String updatedXml = batchUpdateValuesInXmlParams(xmlContent, updates);
+
+            // 将更新后的内容写入新文件
+            if (writeFile(updatedXml, outputFilePath)) {
+                log.info("文件已成功写入到: {}", outputFilePath);
+            } else {
+                log.info("文件写入失败！");
+            }
+
+        } catch (Exception e) {
+            log.error("处理过程中发生错误", e);
+        }
     }
 
     /**
@@ -152,41 +183,4 @@ public class XmlJsonPathParser {
             return false;
         }
     }
-
-    public static void main(String[] args) {
-        try {
-            // 输入输出文件路径
-            String inputFilePath = "C:\\Users\\Administrator\\Desktop\\学习中心v1.5\\测试能力模板转换功能\\原始能力模板.xml";
-            String outputFilePath = "C:\\Users\\Administrator\\Desktop\\学习中心v1.5\\测试能力模板转换功能\\转换后的能力模板.xml";
-
-            // 读取XML文件
-            String xmlContent = readFile(inputFilePath);
-            if (xmlContent == null) {
-                log.info("读取文件失败！");
-                return;
-            }
-
-            // 首先查看当前值
-            Object currentModels = findValueInXmlNodeParams(xmlContent, "KLDetection", "$.models");
-            log.info("当前models值: {}", currentModels);
-
-            // 更新KLDetection节点中的models数组
-            String updatedXml = updateValueInXmlNodeParams(
-                    xmlContent,
-                    "KLDetection",
-                    "$.models",
-                    new String[]{"NewModel1", "NewModel2"}
-            );
-
-            // 将更新后的内容写入新文件
-            if (writeFile(updatedXml, outputFilePath)) {
-                log.info("文件已成功写入到: {}", outputFilePath);
-            } else {
-                log.info("文件写入失败！");
-            }
-
-        } catch (Exception e) {
-            log.error("处理过程中发生错误", e);
-        }
-    }
-} 
+}
