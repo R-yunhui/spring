@@ -1,7 +1,7 @@
 package com.ral.young.spring.demo;
 
-import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -16,6 +17,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * @author renyunhui
@@ -67,30 +70,28 @@ public class XmlJsonPathParser {
     public static String updateValueInXmlNodeParams(String xmlContent, String nodeName, String jsonPath, Object newValue) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setValidating(false);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new ByteArrayInputStream(xmlContent.getBytes(StandardCharsets.UTF_8)));
 
-            // 查找指定的节点
             NodeList nodeList = doc.getElementsByTagName(nodeName);
             if (nodeList.getLength() > 0) {
                 Element element = (Element) nodeList.item(0);
                 String paramsJson = element.getAttribute("Params");
 
-                if (paramsJson != null && !paramsJson.isEmpty()) {
+                if (!paramsJson.isEmpty()) {
                     // 使用JsonPath更新JSON字符串
                     DocumentContext jsonContext = JsonPath.parse(paramsJson);
                     jsonContext.set(jsonPath, newValue);
                     String updatedJson = jsonContext.jsonString();
 
-                    // 更新节点的Params属性
+                    // 直接更新节点的Params属性，不进行转义
                     element.setAttribute("Params", updatedJson);
 
-                    // 将更新后的Document转换回字符串
-                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                    Transformer transformer = transformerFactory.newTransformer();
-                    StringWriter writer = new StringWriter();
-                    transformer.transform(new DOMSource(doc), new StreamResult(writer));
-                    return writer.toString();
+                    // 使用自定义方法将DOM转换为字符串
+                    return domToString(doc);
                 }
             }
             return xmlContent;
@@ -100,6 +101,28 @@ public class XmlJsonPathParser {
         }
     }
 
+    private static String domToString(Document doc) throws Exception {
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+
+        // 设置输出属性
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+        // 使用StringBuilder来构建输出
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(doc), new StreamResult(writer));
+
+        // 手动替换转义字符
+        return writer.toString()
+                .replace("&quot;", "\"")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">");
+    }
+
     /**
      * 从文件读取内容
      * @param filePath 文件路径
@@ -107,7 +130,7 @@ public class XmlJsonPathParser {
      */
     public static String readFile(String filePath) {
         try {
-            return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filePath)), StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("读取文件失败", e);
             return null;
@@ -122,7 +145,7 @@ public class XmlJsonPathParser {
      */
     public static boolean writeFile(String content, String filePath) {
         try {
-            java.nio.file.Files.write(java.nio.file.Paths.get(filePath), content.getBytes(StandardCharsets.UTF_8));
+            Files.write(Paths.get(filePath), content.getBytes(StandardCharsets.UTF_8));
             return true;
         } catch (Exception e) {
             log.error("写入文件失败", e);
@@ -154,10 +177,6 @@ public class XmlJsonPathParser {
                     "$.models",
                     new String[]{"NewModel1", "NewModel2"}
             );
-
-            // 验证更新后的值
-            Object newModels = findValueInXmlNodeParams(updatedXml, "KLDetection", "$.models");
-            log.info("更新后的models值: {}", newModels);
 
             // 将更新后的内容写入新文件
             if (writeFile(updatedXml, outputFilePath)) {
